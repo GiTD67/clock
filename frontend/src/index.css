@@ -71,15 +71,6 @@ button, [role="button"] {
   z-index: 0;
 }
 
-/* Hover: crystal light refraction */
-.glass:hover {
-  border-color: rgba(180, 220, 255, 0.45);
-  box-shadow:
-    0 16px 56px -8px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(230, 245, 255, 0.5),
-    inset 0 -1px 0 rgba(100, 140, 200, 0.25);
-}
-
 /* Focus: glowing crystal rim */
 .glass:focus-within {
   border-color: rgba(200, 230, 255, 0.4);

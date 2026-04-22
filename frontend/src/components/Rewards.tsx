@@ -60,7 +60,7 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
       { ticker: 'MOCK-DRAW', title: 'Draw', yes_ask: 7, no_ask: 93, volume: 320000, open_interest: 210000 },
     ],
     'MOCK-BTC-100K': [
-      { ticker: 'MOCK-BTC-YES', title: 'Yes — $100k+', yes_ask: 67, no_ask: 33, volume: 890000, open_interest: 540000 },
+      { ticker: 'MOCK-BTC-YES', title: 'Yes ($100k+)', yes_ask: 67, no_ask: 33, volume: 890000, open_interest: 540000 },
     ],
     'MOCK-US-PRES': [
       { ticker: 'MOCK-PRES-DEM', title: 'Democratic candidate', yes_ask: 38, no_ask: 62, volume: 2100000, open_interest: 1500000 },
@@ -468,7 +468,7 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
                   )
                 })}
               </div>
-              <div className="text-[10px] text-zinc-500 mt-2">Demo only — not real trading. Payout = stake × (100 / price).</div>
+              <div className="text-[10px] text-zinc-500 mt-2">Demo only. Not real trading. Payout = stake × (100 / price).</div>
             </div>
           )}
         </div>
