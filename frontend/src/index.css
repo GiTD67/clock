@@ -690,4 +690,30 @@ button, [role="button"] {
   border-color: rgba(155, 81, 254, 0.4) !important;
 }
 
+/* bg-emerald-600 → theme color */
+[data-theme="white"] .bg-emerald-600 { background-color: #e5e7eb !important; color: #000 !important; }
+[data-theme="orange"] .bg-emerald-600 { background-color: #f97316 !important; }
+[data-theme="cyan"] .bg-emerald-600 { background-color: #51FEFE !important; color: #000 !important; }
+[data-theme="pink"] .bg-emerald-600 { background-color: #FE51D7 !important; color: #000 !important; }
+[data-theme="purple"] .bg-emerald-600 { background-color: #9B51FE !important; }
 
+/* bg-emerald-500/80 → theme color */
+[data-theme="white"] .bg-emerald-500\/80 { background-color: rgba(229,231,235,0.8) !important; color: #000 !important; }
+[data-theme="orange"] .bg-emerald-500\/80 { background-color: rgba(249,115,22,0.8) !important; }
+[data-theme="cyan"] .bg-emerald-500\/80 { background-color: rgba(81,254,254,0.8) !important; color: #000 !important; }
+[data-theme="pink"] .bg-emerald-500\/80 { background-color: rgba(254,81,215,0.8) !important; color: #000 !important; }
+[data-theme="purple"] .bg-emerald-500\/80 { background-color: rgba(155,81,254,0.8) !important; }
+
+/* bg-emerald-500/10 → theme color */
+[data-theme="white"] .bg-emerald-500\/10 { background-color: rgba(229,231,235,0.1) !important; }
+[data-theme="orange"] .bg-emerald-500\/10 { background-color: rgba(249,115,22,0.1) !important; }
+[data-theme="cyan"] .bg-emerald-500\/10 { background-color: rgba(81,254,254,0.1) !important; }
+[data-theme="pink"] .bg-emerald-500\/10 { background-color: rgba(254,81,215,0.1) !important; }
+[data-theme="purple"] .bg-emerald-500\/10 { background-color: rgba(155,81,254,0.1) !important; }
+
+/* border-emerald-500/30 → theme color */
+[data-theme="white"] .border-emerald-500\/30 { border-color: rgba(229,231,235,0.3) !important; }
+[data-theme="orange"] .border-emerald-500\/30 { border-color: rgba(249,115,22,0.3) !important; }
+[data-theme="cyan"] .border-emerald-500\/30 { border-color: rgba(81,254,254,0.3) !important; }
+[data-theme="pink"] .border-emerald-500\/30 { border-color: rgba(254,81,215,0.3) !important; }
+[data-theme="purple"] .border-emerald-500\/30 { border-color: rgba(155,81,254,0.3) !important; }
