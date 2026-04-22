@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Simple project health check for grokclock."""
+"""Simple project health check for ptoopia."""
 import os
 import sys
 

@@ -1,16 +1,16 @@
-# SwiftShift Master Project Document
+# PTOpia Master Project Document
 
 **The Workday Killer** — A lightning-fast, zero-friction timesheet app for modern teams.
 
 ## 1. Product Overview & Pitch
 
 **The One-Sentence Pitch:**
-SwiftShift is a frictionless, AI-powered timesheet application that replaces clunky legacy HR portals with hardware-integrated clock-ins and a gamified, real-time financial dashboard designed to protect employee flow state.
+PTOpia is a frictionless, AI-powered timesheet application that replaces clunky legacy HR portals with hardware-integrated clock-ins and a gamified, real-time financial dashboard designed to protect employee flow state.
 
 **Presentation Hooks (Intro Options):**
-* **The Hardware Flex:** *(Press the Action Button. Siri announces: "Successfully clocked in.")* "That took zero seconds of screen time. No passwords. No drop-down menus. Right now, brilliant minds are losing their flow state fighting with legacy software just to tell HR they did their jobs. Workday doesn't just waste time; it kills momentum. Meet SwiftShift."
+* **The Hardware Flex:** *(Press the Action Button. Siri announces: "Successfully clocked in.")* "That took zero seconds of screen time. No passwords. No drop-down menus. Right now, brilliant minds are losing their flow state fighting with legacy software just to tell HR they did their jobs. Workday doesn't just waste time; it kills momentum. Meet PTOpia."
 * **The Cultural Mismatch:** "Imagine hiring a Formula 1 driver, putting them on the track, and forcing them to drive a 2012 Toyota Camry with 106,000 miles on it. That is what happens when you hire elite engineers and force them to use administrative software built in 2004. It’s time our internal tools actually looked and felt like the future."
-* **The Financial Hemorrhage:** "When you factor in the 3.5x login failure rate, the 23 minutes it takes to regain deep-work focus after a timeout, and the hours managers spend chasing missing entries, legacy software costs thousands of hours of high-impact output. SwiftShift is an automated, zero-friction financial ledger that protects our most expensive asset: human focus."
+* **The Financial Hemorrhage:** "When you factor in the 3.5x login failure rate, the 23 minutes it takes to regain deep-work focus after a timeout, and the hours managers spend chasing missing entries, legacy software costs thousands of hours of high-impact output. PTOpia is an automated, zero-friction financial ledger that protects our most expensive asset: human focus."
 * **The Casino Vault (Gamification):** "How do you get elite talent to care about corporate compliance? You addict them. We took the most boring task in the corporate world and injected it with the exact same behavioral loops as a high-end video game. We replaced static grids with real-time slot machine tickers and liquid glass aesthetics. We aren't just tracking time; we are gamifying compensation."
 
 ---

@@ -1,6 +1,6 @@
-# GrokClock Backend
+# PTOpia Backend
 
-Flask API server for the GrokClock HR platform (Workday killer).
+Flask API server for the PTOpia HR platform (Workday killer).
 
 ## Overview
 

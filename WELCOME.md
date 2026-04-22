@@ -1,7 +1,7 @@
 # Welcome to The Guild
 
 **Team:** DoesItWorkday
-**Project:** GrokClock
+**Project:** PTOpia
 **Members:** tdixon@teachx.ai, shsingh@teachx.ai
 
 ---

@@ -489,7 +489,7 @@ function LoginPage() {
       <div className="hidden lg:flex w-5/12 flex-col justify-between p-10 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="logo.png" alt="GrokClock" className="h-9 w-auto" />
+            <img src="logo.png" alt="PTOpia" className="h-9 w-auto" />
             <span className="font-semibold text-2xl tracking-[1px]">GROKCLOCK</span>
           </div>
           <div className="max-w-[380px]">
@@ -605,7 +605,7 @@ function LoginPage() {
           <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[280px] max-w-[calc(100%-2rem)] z-50 p-3 text-[11px] leading-snug bg-black/90 border border-[#D7FE51]/40 rounded-2xl shadow-xl text-zinc-300">
             <button type="button" onClick={() => setShowDemoHint(false)} className="absolute top-2 right-2 text-zinc-500 hover:text-white text-sm leading-none" aria-label="Close">×</button>
             Dear Wonderful Grokathon Judges,<br /><br />
-            Feel free to test out GrokClock by creating your own account, or you're totally welcome to use the following demo account we created for you:<br /><br />
+            Feel free to test out PTOpia by creating your own account, or you're totally welcome to use the following demo account we created for you:<br /><br />
             <span className="text-[#D7FE51]">Username: gork@demo.com</span><br />
             <span className="text-[#D7FE51]">Password: demoaccount</span><br /><br />
             Thank you very much! We hope you love it.<br />
@@ -676,7 +676,7 @@ function SignupPage() {
       <div className="hidden lg:flex w-5/12 flex-col justify-between p-10 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="logo.png" alt="GrokClock" className="h-9 w-auto" />
+            <img src="logo.png" alt="PTOpia" className="h-9 w-auto" />
             <span className="font-semibold text-2xl tracking-[1px]">GROKCLOCK</span>
           </div>
           <div className="max-w-[380px]">
@@ -814,7 +814,7 @@ function SignupPage() {
           <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[280px] max-w-[calc(100%-2rem)] z-50 p-3 text-[11px] leading-snug bg-black/90 border border-[#D7FE51]/40 rounded-2xl shadow-xl text-zinc-300">
             <button type="button" onClick={() => setShowDemoHint(false)} className="absolute top-2 right-2 text-zinc-500 hover:text-white text-sm leading-none" aria-label="Close">×</button>
             Dear Wonderful Grokathon Judges,<br /><br />
-            Feel free to test out GrokClock by creating your own account, or you're totally welcome to use the following demo account we created for you:<br /><br />
+            Feel free to test out PTOpia by creating your own account, or you're totally welcome to use the following demo account we created for you:<br /><br />
             <span className="text-[#D7FE51]">Username: gork@demo.com</span><br />
             <span className="text-[#D7FE51]">Password: demoaccount</span><br /><br />
             Thank you very much! We hope you love it.<br />
@@ -888,7 +888,7 @@ export default function App() {
     name: 'Trevor Dixon and Shubham Singh',
     title: 'Co-CEOs & Co-Founders',
     dept: 'Executive',
-    email: 'co-founders@grokclock.com',
+    email: 'co-founders@ptoopia.com',
     reportsTo: null,
     teamSize: 5,
     children: [
@@ -897,21 +897,21 @@ export default function App() {
         name: 'Jordan Lee',
         title: 'CTO',
         dept: 'Engineering',
-        email: 'jordan@grokclock.com',
+        email: 'jordan@ptoopia.com',
         reportsTo: 'Alex Rivera',
         teamSize: 3,
         children: [
-          { id: 'fe', name: 'Sam Chen', title: 'Frontend Lead', dept: 'Engineering', email: 'sam@grokclock.com', reportsTo: 'Jordan Lee', teamSize: 3, children: [
-            { id: 'fe1', name: 'Parker Kim', title: 'Senior Frontend Engineer', dept: 'Engineering', email: 'parker@grokclock.com', reportsTo: 'Sam Chen', teamSize: 0, children: [] },
-            { id: 'fe2', name: 'Quinn Torres', title: 'Frontend Engineer', dept: 'Engineering', email: 'quinn@grokclock.com', reportsTo: 'Sam Chen', teamSize: 0, children: [] },
+          { id: 'fe', name: 'Sam Chen', title: 'Frontend Lead', dept: 'Engineering', email: 'sam@ptoopia.com', reportsTo: 'Jordan Lee', teamSize: 3, children: [
+            { id: 'fe1', name: 'Parker Kim', title: 'Senior Frontend Engineer', dept: 'Engineering', email: 'parker@ptoopia.com', reportsTo: 'Sam Chen', teamSize: 0, children: [] },
+            { id: 'fe2', name: 'Quinn Torres', title: 'Frontend Engineer', dept: 'Engineering', email: 'quinn@ptoopia.com', reportsTo: 'Sam Chen', teamSize: 0, children: [] },
           ] },
-          { id: 'be', name: 'Taylor Kim', title: 'Backend Lead', dept: 'Engineering', email: 'taylor@grokclock.com', reportsTo: 'Jordan Lee', teamSize: 4, children: [
-            { id: 'be1', name: 'Cameron Ellis', title: 'Senior Backend Engineer', dept: 'Engineering', email: 'cameron@grokclock.com', reportsTo: 'Taylor Kim', teamSize: 0, children: [] },
-            { id: 'be2', name: 'Jordan Vale', title: 'Backend Engineer', dept: 'Engineering', email: 'jordanv@grokclock.com', reportsTo: 'Taylor Kim', teamSize: 0, children: [] },
-            { id: 'be3', name: 'Morgan Ellis', title: 'Backend Engineer', dept: 'Engineering', email: 'morgan@grokclock.com', reportsTo: 'Taylor Kim', teamSize: 0, children: [] },
+          { id: 'be', name: 'Taylor Kim', title: 'Backend Lead', dept: 'Engineering', email: 'taylor@ptoopia.com', reportsTo: 'Jordan Lee', teamSize: 4, children: [
+            { id: 'be1', name: 'Cameron Ellis', title: 'Senior Backend Engineer', dept: 'Engineering', email: 'cameron@ptoopia.com', reportsTo: 'Taylor Kim', teamSize: 0, children: [] },
+            { id: 'be2', name: 'Jordan Vale', title: 'Backend Engineer', dept: 'Engineering', email: 'jordanv@ptoopia.com', reportsTo: 'Taylor Kim', teamSize: 0, children: [] },
+            { id: 'be3', name: 'Morgan Ellis', title: 'Backend Engineer', dept: 'Engineering', email: 'morgan@ptoopia.com', reportsTo: 'Taylor Kim', teamSize: 0, children: [] },
           ] },
-          { id: 'infra', name: 'Casey Brooks', title: 'Infra Lead', dept: 'Engineering', email: 'casey@grokclock.com', reportsTo: 'Jordan Lee', teamSize: 2, children: [
-            { id: 'inf1', name: 'Riley Voss', title: 'DevOps Engineer', dept: 'Engineering', email: 'rileyv@grokclock.com', reportsTo: 'Casey Brooks', teamSize: 0, children: [] },
+          { id: 'infra', name: 'Casey Brooks', title: 'Infra Lead', dept: 'Engineering', email: 'casey@ptoopia.com', reportsTo: 'Jordan Lee', teamSize: 2, children: [
+            { id: 'inf1', name: 'Riley Voss', title: 'DevOps Engineer', dept: 'Engineering', email: 'rileyv@ptoopia.com', reportsTo: 'Casey Brooks', teamSize: 0, children: [] },
           ] },
         ]
       },
@@ -920,16 +920,16 @@ export default function App() {
         name: 'Casey Morgan',
         title: 'VP Sales',
         dept: 'Sales',
-        email: 'casey@grokclock.com',
+        email: 'casey@ptoopia.com',
         reportsTo: 'Alex Rivera',
         teamSize: 2,
         children: [
-          { id: 'na', name: 'Jamie Quinn', title: 'North America Sales', dept: 'Sales', email: 'jamie@grokclock.com', reportsTo: 'Casey Morgan', teamSize: 5, children: [
-            { id: 'na1', name: 'Skyler Reed', title: 'Account Executive', dept: 'Sales', email: 'skyler@grokclock.com', reportsTo: 'Jamie Quinn', teamSize: 0, children: [] },
-            { id: 'na2', name: 'Avery Lane', title: 'Account Executive', dept: 'Sales', email: 'avery@grokclock.com', reportsTo: 'Jamie Quinn', teamSize: 0, children: [] },
+          { id: 'na', name: 'Jamie Quinn', title: 'North America Sales', dept: 'Sales', email: 'jamie@ptoopia.com', reportsTo: 'Casey Morgan', teamSize: 5, children: [
+            { id: 'na1', name: 'Skyler Reed', title: 'Account Executive', dept: 'Sales', email: 'skyler@ptoopia.com', reportsTo: 'Jamie Quinn', teamSize: 0, children: [] },
+            { id: 'na2', name: 'Avery Lane', title: 'Account Executive', dept: 'Sales', email: 'avery@ptoopia.com', reportsTo: 'Jamie Quinn', teamSize: 0, children: [] },
           ] },
-          { id: 'eu', name: 'Riley Patel', title: 'Europe Sales', dept: 'Sales', email: 'riley@grokclock.com', reportsTo: 'Casey Morgan', teamSize: 4, children: [
-            { id: 'eu1', name: 'Dakota Lane', title: 'Account Executive', dept: 'Sales', email: 'dakota@grokclock.com', reportsTo: 'Riley Patel', teamSize: 0, children: [] },
+          { id: 'eu', name: 'Riley Patel', title: 'Europe Sales', dept: 'Sales', email: 'riley@ptoopia.com', reportsTo: 'Casey Morgan', teamSize: 4, children: [
+            { id: 'eu1', name: 'Dakota Lane', title: 'Account Executive', dept: 'Sales', email: 'dakota@ptoopia.com', reportsTo: 'Riley Patel', teamSize: 0, children: [] },
           ] },
         ]
       },
@@ -938,12 +938,12 @@ export default function App() {
         name: 'Dana Morales',
         title: 'VP People',
         dept: 'HR',
-        email: 'dana@grokclock.com',
+        email: 'dana@ptoopia.com',
         reportsTo: 'Alex Rivera',
         teamSize: 3,
         children: [
-          { id: 'hr1', name: 'Peyton Blake', title: 'HR Manager', dept: 'HR', email: 'peyton@grokclock.com', reportsTo: 'Dana Morales', teamSize: 2, children: [] },
-          { id: 'hr2', name: 'Sage Rivera', title: 'Recruiter', dept: 'HR', email: 'sage@grokclock.com', reportsTo: 'Dana Morales', teamSize: 0, children: [] },
+          { id: 'hr1', name: 'Peyton Blake', title: 'HR Manager', dept: 'HR', email: 'peyton@ptoopia.com', reportsTo: 'Dana Morales', teamSize: 2, children: [] },
+          { id: 'hr2', name: 'Sage Rivera', title: 'Recruiter', dept: 'HR', email: 'sage@ptoopia.com', reportsTo: 'Dana Morales', teamSize: 0, children: [] },
         ]
       },
       {
@@ -951,12 +951,12 @@ export default function App() {
         name: 'Drew Ellis',
         title: 'VP Marketing',
         dept: 'Marketing',
-        email: 'drew@grokclock.com',
+        email: 'drew@ptoopia.com',
         reportsTo: 'Alex Rivera',
         teamSize: 3,
         children: [
-          { id: 'mkt1', name: 'Harper Vale', title: 'Growth Lead', dept: 'Marketing', email: 'harper@grokclock.com', reportsTo: 'Drew Ellis', teamSize: 2, children: [] },
-          { id: 'mkt2', name: 'Rowan Knox', title: 'Brand Designer', dept: 'Marketing', email: 'rowan@grokclock.com', reportsTo: 'Drew Ellis', teamSize: 0, children: [] },
+          { id: 'mkt1', name: 'Harper Vale', title: 'Growth Lead', dept: 'Marketing', email: 'harper@ptoopia.com', reportsTo: 'Drew Ellis', teamSize: 2, children: [] },
+          { id: 'mkt2', name: 'Rowan Knox', title: 'Brand Designer', dept: 'Marketing', email: 'rowan@ptoopia.com', reportsTo: 'Drew Ellis', teamSize: 0, children: [] },
         ]
       },
       {
@@ -964,11 +964,11 @@ export default function App() {
         name: 'Emerson Holt',
         title: 'CFO',
         dept: 'Finance',
-        email: 'emerson@grokclock.com',
+        email: 'emerson@ptoopia.com',
         reportsTo: 'Alex Rivera',
         teamSize: 2,
         children: [
-          { id: 'fin1', name: 'Finley Quinn', title: 'Controller', dept: 'Finance', email: 'finley@grokclock.com', reportsTo: 'Emerson Holt', teamSize: 1, children: [] },
+          { id: 'fin1', name: 'Finley Quinn', title: 'Controller', dept: 'Finance', email: 'finley@ptoopia.com', reportsTo: 'Emerson Holt', teamSize: 1, children: [] },
         ]
       },
     ]
@@ -1305,8 +1305,8 @@ export default function App() {
     <div className="ta-app" data-theme={theme}>
       <nav className="ta-navbar">
         <div className="ta-navbar-brand cursor-pointer" onClick={() => setActiveView('clock')}>
-          <img src="logo.png" alt="GrokClock" className="h-10 w-auto" />
-          <span>GrokClock</span>
+          <img src="logo.png" alt="PTOpia" className="h-10 w-auto" />
+          <span>PTOpia</span>
         </div>
         <div className="ta-navbar-user">
           {/* Daily streak counter */}
