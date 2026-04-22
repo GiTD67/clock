@@ -491,8 +491,8 @@ function LoginPage() {
       <div className="hidden lg:flex w-5/12 flex-col justify-between p-10 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="logo.png" alt="GrokClock" className="h-9 w-auto" />
-            <span className="font-semibold text-2xl tracking-[1px]">GROKCLOCK</span>
+            <img src="logo.png" alt="SwiftShift" className="h-9 w-auto" />
+            <span className="font-semibold text-2xl tracking-[1px]">SWIFTSHIFT</span>
           </div>
           <div className="max-w-[380px]">
             <div className="uppercase tracking-[4px] text-xs text-zinc-500 mb-3"><span className="text-[#D7FE51]">AI POWERED</span> HR ENTERPRISE PLATFORM</div>
@@ -523,7 +523,7 @@ function LoginPage() {
         <div className="glass w-full max-w-[380px] rounded-3xl p-8 border border-white/10">
           {/* Header */}
           <div className="mb-6">
-            <div className="text-xs tracking-[2px] text-[#D7FE51] mb-1.5 uppercase">Sign In to GrokClock</div>
+            <div className="text-xs tracking-[2px] text-[#D7FE51] mb-1.5 uppercase">Sign In to SwiftShift</div>
             <h2 className="text-3xl font-semibold tracking-tight mb-1.5">Welcome back</h2>
             {isReturningUser && (
               <p className="text-zinc-400 text-sm">Good to see you. Ready to clock in?</p>
@@ -617,7 +617,7 @@ function LoginPage() {
 
       {/* Footer: bottom right corner */}
       <div className="absolute bottom-6 right-0 p-4 text-[10px] text-zinc-600">
-        © 2026 GrokClock. All rights reserved.
+        © 2026 SwiftShift. All rights reserved.
       </div>
     </div>
   )
@@ -676,8 +676,8 @@ function SignupPage() {
       <div className="hidden lg:flex w-5/12 flex-col justify-between p-10 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="logo.png" alt="GrokClock" className="h-9 w-auto" />
-            <span className="font-semibold text-2xl tracking-[1px]">GROKCLOCK</span>
+            <img src="logo.png" alt="SwiftShift" className="h-9 w-auto" />
+            <span className="font-semibold text-2xl tracking-[1px]">SWIFTSHIFT</span>
           </div>
           <div className="max-w-[380px]">
             <div className="uppercase tracking-[4px] text-xs text-zinc-500 mb-3"><span className="text-[#D7FE51]">AI POWERED</span> HR ENTERPRISE PLATFORM</div>
@@ -824,7 +824,7 @@ function SignupPage() {
 
       {/* Footer: bottom right corner */}
       <div className="absolute bottom-6 right-0 p-4 text-[10px] text-zinc-600">
-        © 2026 GrokClock. All rights reserved.
+        © 2026 SwiftShift. All rights reserved.
       </div>
     </div>
   )
@@ -1198,8 +1198,8 @@ function MainApp({ user, isAdmin }: { user: User; isAdmin: boolean }) {
     <div className="ta-app" data-theme={theme}>
       <nav className="ta-navbar">
         <div className="ta-navbar-brand cursor-pointer" onClick={() => setActiveView('clock')}>
-          <img src="logo.png" alt="GrokClock" className="h-10 w-auto" />
-          <span>GrokClock</span>
+          <img src="logo.png" alt="SwiftShift" className="h-10 w-auto" />
+          <span>SwiftShift</span>
         </div>
         <div className="ta-navbar-user">
           {/* Daily streak counter */}
