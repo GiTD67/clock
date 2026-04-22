@@ -116,7 +116,7 @@ export function EntryRow({ entry, onUpdate, onDelete, disabled }: EntryRowProps)
             {entry.startTime}
           </span>
         )}
-        <span className="text-zinc-600">—</span>
+        <span className="text-zinc-600">to</span>
         {editing === 'endTime' ? (
           <input
             type="time"
@@ -159,7 +159,7 @@ export function EntryRow({ entry, onUpdate, onDelete, disabled }: EntryRowProps)
             onClick={() => startEdit('description', entry.description)}
             className="cursor-pointer hover:text-white/70 transition truncate"
           >
-            {entry.description || <span className="italic opacity-50">—</span>}
+            {entry.description || <span className="italic opacity-50">No description</span>}
           </div>
         )}
       </div>

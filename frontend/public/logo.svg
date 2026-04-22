@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#000" stroke="#d7fe51" stroke-width="3"/>
+  <!-- Lightning bolt / swift arrow shape -->
+  <path d="M 115 25 L 75 105 L 100 105 L 85 175 L 140 85 L 112 85 Z" fill="#d7fe51"/>
+  <!-- Inner highlight -->
+  <path d="M 115 38 L 84 105 L 103 105 L 91 155 L 133 88 L 110 88 Z" fill="#000" opacity="0.25"/>
+</svg>
