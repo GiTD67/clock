@@ -14,7 +14,7 @@ const API_BASE = (() => {
   return m ? m[1] : ''
 })()
 
-type View = 'clock' | 'timesheet' | 'rewards' | 'admin' | 'profile' | 'insurance' | 'orgchart' | 'taxes' | 'groktax' | 'grokky' | 'applications' | 'jobs'
+type View = 'clock' | 'timesheet' | 'rewards' | 'admin' | 'profile' | 'insurance' | 'orgchart' | 'taxes' | 'groktax' | 'grokky' | 'applications' | 'jobs' | 'schedules' | 'payroll' | 'reports' | 'leaves' | 'compliance' | 'hiring'
 
 function formatMs(ms: number): string {
   const totalSec = Math.floor(ms / 1000)
@@ -427,6 +427,37 @@ function TimesheetView({ user }: { user: any }) {
   )
 }
 
+// ===== Theme-aware Logo SVG =====
+function LogoSVG({ className, accentColor = 'var(--accent-color)' }: { className?: string; accentColor?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" className={className}>
+      <circle cx="100" cy="100" r="90" fill="#000" stroke={accentColor} strokeWidth="3.5"/>
+      <rect x="97.5" y="18" width="5" height="14" rx="2.5" fill={accentColor} opacity="0.75"/>
+      <rect x="168" y="97.5" width="14" height="5" rx="2.5" fill={accentColor} opacity="0.75"/>
+      <rect x="97.5" y="168" width="5" height="14" rx="2.5" fill={accentColor} opacity="0.75"/>
+      <rect x="18" y="97.5" width="14" height="5" rx="2.5" fill={accentColor} opacity="0.75"/>
+      <line x1="100" y1="100" x2="58" y2="60" stroke={accentColor} strokeWidth="4" strokeLinecap="round" opacity="0.55"/>
+      <path d="M 117 28 L 80 108 L 105 108 L 88 172 L 138 88 L 111 88 Z" fill={accentColor}/>
+      <path d="M 117 44 L 88 108 L 107 108 L 93 153 L 130 94 L 109 94 Z" fill="#000" opacity="0.22"/>
+      <circle cx="100" cy="100" r="6" fill={accentColor}/>
+      <circle cx="100" cy="100" r="3" fill="#000"/>
+      <circle cx="42" cy="65" r="5" fill={accentColor} opacity="0.8"/>
+      <line x1="46" y1="68" x2="68" y2="82" stroke={accentColor} strokeWidth="1.8" strokeLinecap="round" opacity="0.45"/>
+      <circle cx="156" cy="148" r="5" fill={accentColor} opacity="0.8"/>
+      <line x1="152" y1="144" x2="132" y2="126" stroke={accentColor} strokeWidth="1.8" strokeLinecap="round" opacity="0.45"/>
+    </svg>
+  )
+}
+
+function getThemeAccentHex(theme: string): string {
+  if (theme === 'white') return '#E5E7EB'
+  if (theme === 'orange') return '#F97316'
+  if (theme === 'cyan') return '#51FEFE'
+  if (theme === 'pink') return '#FE51D7'
+  if (theme === 'purple') return '#9B51FE'
+  return '#D7FE51'
+}
+
 // ===== Auth pages =====
 function LoginPage() {
   const [email, setEmail] = useState(() => localStorage.getItem('lastEmail') || '')
@@ -438,6 +469,7 @@ function LoginPage() {
   const [shockwaveActive] = useState(false)
 
   const isReturningUser = !!localStorage.getItem('lastEmail')
+  const loginAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -488,11 +520,11 @@ function LoginPage() {
       <div className="hidden lg:flex w-5/12 flex-col justify-between p-10 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="logo.svg" alt="SwiftShift" className="h-9 w-auto" />
+            <LogoSVG className="h-9 w-auto" accentColor={loginAccentHex} />
             <span className="font-semibold text-2xl tracking-[1px]">SWIFTSHIFT</span>
           </div>
           <div className="max-w-[380px]">
-            <div className="uppercase tracking-[4px] text-xs text-zinc-500 mb-3"><span className="text-[#D7FE51]">AI POWERED</span> HR ENTERPRISE PLATFORM</div>
+            <div className="uppercase tracking-[4px] text-xs text-zinc-500 mb-3"><span style={{ color: loginAccentHex }}>AI POWERED</span> HR ENTERPRISE PLATFORM</div>
             <h1 className="text-[60px] leading-[1.05] font-semibold tracking-tighter mb-5">
               Time is money.
             </h1>
@@ -630,6 +662,7 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [shockwaveActive] = useState(false)
+  const signupAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -672,11 +705,11 @@ function SignupPage() {
       <div className="hidden lg:flex w-5/12 flex-col justify-between p-10 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="logo.svg" alt="SwiftShift" className="h-9 w-auto" />
+            <LogoSVG className="h-9 w-auto" accentColor={signupAccentHex} />
             <span className="font-semibold text-2xl tracking-[1px]">SWIFTSHIFT</span>
           </div>
           <div className="max-w-[380px]">
-            <div className="uppercase tracking-[4px] text-xs text-zinc-500 mb-3"><span className="text-[#D7FE51]">AI POWERED</span> HR ENTERPRISE PLATFORM</div>
+            <div className="uppercase tracking-[4px] text-xs text-zinc-500 mb-3"><span style={{ color: signupAccentHex }}>AI POWERED</span> HR ENTERPRISE PLATFORM</div>
             <h1 className="text-[60px] leading-[1.05] font-semibold tracking-tighter mb-5">
               Time is money.
             </h1>
@@ -986,6 +1019,20 @@ export default function App() {
   // Persist theme
   useEffect(() => {
     localStorage.setItem('theme', theme)
+  }, [theme])
+
+  // Update favicon dynamically when theme changes
+  useEffect(() => {
+    const accent = getThemeAccentHex(theme)
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="14" fill="#000"/><circle cx="32" cy="32" r="26" stroke="${accent}" stroke-width="2.5" fill="none"/><rect x="30.5" y="9" width="3" height="6" rx="1.5" fill="${accent}" opacity="0.75"/><rect x="49" y="30.5" width="6" height="3" rx="1.5" fill="${accent}" opacity="0.75"/><rect x="30.5" y="49" width="3" height="6" rx="1.5" fill="${accent}" opacity="0.75"/><rect x="9" y="30.5" width="6" height="3" rx="1.5" fill="${accent}" opacity="0.75"/><path d="M 37 8 L 22 34 L 32 34 L 26 56 L 46 30 L 35 30 Z" fill="${accent}"/></svg>`
+    const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = 'icon'
+      document.head.appendChild(link)
+    }
+    link.href = url
   }, [theme])
 
   const cycleTheme = () => {
@@ -1301,7 +1348,7 @@ export default function App() {
     <div className="ta-app" data-theme={theme}>
       <nav className="ta-navbar">
         <div className="ta-navbar-brand cursor-pointer" onClick={() => setActiveView('clock')}>
-          <img src="logo.svg" alt="SwiftShift" className="h-10 w-auto" />
+          <LogoSVG className="h-10 w-auto" />
           <span>SwiftShift</span>
         </div>
         <div className="ta-navbar-user">
@@ -1431,7 +1478,61 @@ export default function App() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
               <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
             </svg>
-            Admin
+            Manage Users
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'schedules' ? 'active' : ''}`}
+            onClick={() => setActiveView('schedules')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Schedule Management
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'payroll' ? 'active' : ''}`}
+            onClick={() => setActiveView('payroll')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+              <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            Payroll
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'reports' ? 'active' : ''}`}
+            onClick={() => setActiveView('reports')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Reports &amp; Analytics
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'leaves' ? 'active' : ''}`}
+            onClick={() => setActiveView('leaves')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Leave Management
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'compliance' ? 'active' : ''}`}
+            onClick={() => setActiveView('compliance')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+            Compliance &amp; Audit
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'hiring' ? 'active' : ''}`}
+            onClick={() => setActiveView('hiring')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+            Hiring &amp; Onboarding
           </button>
         </nav>
         <div className="mt-auto pt-4">
@@ -1773,6 +1874,299 @@ export default function App() {
                   </tbody>
                 </table>
                 {users.length === 0 && <div className="text-zinc-400 mt-4">No users yet.</div>}
+              </div>
+            </div>
+          )}
+          {activeView === 'schedules' && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold neon-green">Schedule Management</h1>
+                  <p className="text-sm text-zinc-400">Manage shifts and employee schedules</p>
+                </div>
+                <button className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                  + Add Shift
+                </button>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                  <div key={day} className="glass rounded-2xl p-3">
+                    <div className="text-xs font-semibold text-zinc-400 mb-2 uppercase">{day}</div>
+                    {['Morning 6–2', 'Afternoon 2–10'].map((shift, i) => (
+                      <div key={i} className="text-xs rounded-lg px-2 py-1.5 mb-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: 'var(--accent-color-dim)', borderLeft: '3px solid var(--accent-color)', color: 'var(--accent-color)' }}>
+                        {shift}
+                        <div className="text-zinc-400 mt-0.5">{i === 0 ? '3 assigned' : '2 assigned'}</div>
+                      </div>
+                    ))}
+                    <div className="text-xs text-zinc-600 mt-2 text-center cursor-pointer hover:text-zinc-400">+ add</div>
+                  </div>
+                ))}
+              </div>
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Shift Coverage Summary</h2>
+                <div className="grid grid-cols-3 gap-4">
+                  {[['Total Shifts This Week', '14'], ['Filled Shifts', '11'], ['Open Shifts', '3']].map(([label, val]) => (
+                    <div key={label} className="bg-white/5 rounded-2xl p-4 text-center">
+                      <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
+                      <div className="text-xs text-zinc-400 mt-1">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeView === 'payroll' && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold neon-green">Payroll</h1>
+                  <p className="text-sm text-zinc-400">Current pay period: Apr 15 – Apr 30, 2026</p>
+                </div>
+                <button className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                  Run Payroll
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {[['Total Payroll', '$48,320'], ['Employees Paid', '24'], ['Avg Hours/Employee', '38.5h'], ['Overtime Hours', '42h']].map(([label, val]) => (
+                  <div key={label} className="glass rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
+                    <div className="text-xs text-zinc-400 mt-1">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Employee Payroll Summary</h2>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-zinc-400 border-b border-white/10 text-left">
+                      <th className="py-2">Employee</th>
+                      <th className="py-2">Role</th>
+                      <th className="py-2">Hours</th>
+                      <th className="py-2">Rate</th>
+                      <th className="py-2">Gross Pay</th>
+                      <th className="py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['Alex Rivera', 'Co-Founder', '80h', '$85/hr', '$6,800', 'Processed'],
+                      ['Jordan Lee', 'Engineering Lead', '76h', '$72/hr', '$5,472', 'Processed'],
+                      ['Dana Morales', 'HR Director', '78h', '$65/hr', '$5,070', 'Pending'],
+                      ['Casey Morgan', 'Sales Lead', '82h', '$60/hr', '$4,920', 'Pending'],
+                    ].map(([name, role, hrs, rate, gross, status]) => (
+                      <tr key={name} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="py-2 font-medium">{name}</td>
+                        <td className="py-2 text-zinc-400">{role}</td>
+                        <td className="py-2">{hrs}</td>
+                        <td className="py-2">{rate}</td>
+                        <td className="py-2 font-semibold" style={{ color: 'var(--accent-color)' }}>{gross}</td>
+                        <td className="py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status === 'Processed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>{status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {activeView === 'reports' && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div>
+                <h1 className="text-2xl font-semibold neon-green">Reports &amp; Analytics</h1>
+                <p className="text-sm text-zinc-400">Workforce performance and operational insights</p>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                {[
+                  { title: 'Hours Worked (This Month)', value: '1,842h', change: '+4.2%', sub: 'vs last month' },
+                  { title: 'Labor Cost (This Month)', value: '$94,600', change: '+1.8%', sub: 'vs last month' },
+                  { title: 'Absenteeism Rate', value: '2.1%', change: '-0.4%', sub: 'improvement' },
+                  { title: 'Overtime Rate', value: '8.3%', change: '+1.1%', sub: 'above target' },
+                ].map(({ title, value, change, sub }) => (
+                  <div key={title} className="glass rounded-2xl p-5">
+                    <div className="text-sm text-zinc-400 mb-1">{title}</div>
+                    <div className="text-3xl font-bold mb-1" style={{ color: 'var(--accent-color)' }}>{value}</div>
+                    <div className="text-xs text-zinc-500"><span className={change.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}>{change}</span> {sub}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Department Hours Breakdown</h2>
+                <div className="space-y-3">
+                  {[['Engineering', 680, 800], ['Sales', 420, 500], ['HR', 210, 240], ['Marketing', 190, 200], ['Finance', 140, 160]].map(([dept, used, total]) => (
+                    <div key={dept}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{dept}</span>
+                        <span className="text-zinc-400">{used}h / {total}h</span>
+                      </div>
+                      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${Math.round((used as number / total as number) * 100)}%`, backgroundColor: 'var(--accent-color)' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeView === 'leaves' && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold neon-green">Leave Management</h1>
+                  <p className="text-sm text-zinc-400">Manage PTO requests and absence tracking</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {[['Pending Requests', '5'], ['Approved This Month', '12'], ['Denied This Month', '2'], ['Avg PTO Balance', '14.2 days']].map(([label, val]) => (
+                  <div key={label} className="glass rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
+                    <div className="text-xs text-zinc-400 mt-1">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Pending Leave Requests</h2>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Parker Kim', type: 'Vacation', dates: 'May 5–9, 2026', days: 5, status: 'Pending' },
+                    { name: 'Quinn Torres', type: 'Sick Leave', dates: 'Apr 24, 2026', days: 1, status: 'Pending' },
+                    { name: 'Skyler Reed', type: 'Personal', dates: 'May 12, 2026', days: 1, status: 'Pending' },
+                    { name: 'Avery Lane', type: 'Vacation', dates: 'May 19–23, 2026', days: 5, status: 'Pending' },
+                    { name: 'Dakota Lane', type: 'Bereavement', dates: 'Apr 25–27, 2026', days: 3, status: 'Pending' },
+                  ].map(({ name, type, dates, days, status }) => (
+                    <div key={name} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+                      <div>
+                        <div className="font-medium">{name}</div>
+                        <div className="text-xs text-zinc-400">{type} · {dates} · {days} day{days > 1 ? 's' : ''}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="px-3 py-1 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">Approve</button>
+                        <button className="px-3 py-1 rounded-lg text-xs font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">Deny</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeView === 'compliance' && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div>
+                <h1 className="text-2xl font-semibold neon-green">Compliance &amp; Audit</h1>
+                <p className="text-sm text-zinc-400">Policy compliance, certifications, and audit logs</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {[['Compliance Score', '94%'], ['Open Incidents', '2'], ['Overdue Trainings', '7']].map(([label, val]) => (
+                  <div key={label} className="glass rounded-2xl p-4 text-center">
+                    <div className="text-3xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
+                    <div className="text-xs text-zinc-400 mt-1">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Recent Audit Log</h2>
+                <div className="space-y-2">
+                  {[
+                    { time: 'Today 09:14', event: 'User role updated', user: 'Admin', severity: 'Info' },
+                    { time: 'Today 08:52', event: 'Failed login attempt (3x)', user: 'unknown@email.com', severity: 'Warning' },
+                    { time: 'Yesterday 17:30', event: 'Payroll run initiated', user: 'Dana Morales', severity: 'Info' },
+                    { time: 'Yesterday 14:00', event: 'Employee record exported', user: 'Jordan Lee', severity: 'Info' },
+                    { time: 'Apr 21 11:15', event: 'Incident report filed', user: 'Peyton Blake', severity: 'High' },
+                  ].map(({ time, event, user, severity }) => (
+                    <div key={time + event} className="flex items-center gap-4 bg-white/5 rounded-xl px-4 py-2.5 text-sm">
+                      <span className="text-zinc-500 w-36 flex-shrink-0">{time}</span>
+                      <span className="flex-1">{event}</span>
+                      <span className="text-zinc-400 w-32 flex-shrink-0">{user}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${severity === 'High' ? 'bg-red-500/20 text-red-400' : severity === 'Warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>{severity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Required Certifications</h2>
+                <div className="space-y-2">
+                  {[
+                    { cert: 'Workplace Safety Training', due: 'May 1, 2026', completed: 17, total: 24 },
+                    { cert: 'Data Privacy & GDPR', due: 'Jun 15, 2026', completed: 22, total: 24 },
+                    { cert: 'Anti-Harassment Policy', due: 'Apr 30, 2026', completed: 21, total: 24 },
+                  ].map(({ cert, due, completed, total }) => (
+                    <div key={cert} className="bg-white/5 rounded-xl px-4 py-3">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium">{cert}</span>
+                        <span className="text-zinc-400">Due {due} · {completed}/{total} completed</span>
+                      </div>
+                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${Math.round(completed / total * 100)}%`, backgroundColor: 'var(--accent-color)' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeView === 'hiring' && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold neon-green">Hiring &amp; Onboarding</h1>
+                  <p className="text-sm text-zinc-400">Recruitment pipeline and new hire management</p>
+                </div>
+                <button className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                  + Post Job
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {[['Open Positions', '6'], ['Active Applicants', '38'], ['Interviews This Week', '9'], ['Offers Pending', '3']].map(([label, val]) => (
+                  <div key={label} className="glass rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
+                    <div className="text-xs text-zinc-400 mt-1">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="glass rounded-3xl p-6">
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Hiring Pipeline</h2>
+                  <div className="space-y-3">
+                    {[
+                      { role: 'Senior Backend Engineer', dept: 'Engineering', stage: 'Final Interview', applicants: 12 },
+                      { role: 'Product Designer', dept: 'Design', stage: 'Phone Screen', applicants: 8 },
+                      { role: 'Account Executive', dept: 'Sales', stage: 'Offer Sent', applicants: 5 },
+                      { role: 'HR Coordinator', dept: 'HR', stage: 'Application Review', applicants: 7 },
+                    ].map(({ role, dept, stage, applicants }) => (
+                      <div key={role} className="bg-white/5 rounded-xl px-4 py-3">
+                        <div className="font-medium text-sm">{role}</div>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs text-zinc-400">{dept} · {applicants} applicants</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color-dim)', color: 'var(--accent-color)' }}>{stage}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="glass rounded-3xl p-6">
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Onboarding Queue</h2>
+                  <div className="space-y-3">
+                    {[
+                      { name: 'Sam Carter', role: 'Frontend Engineer', start: 'May 5, 2026', progress: 30 },
+                      { name: 'Mia Thompson', role: 'Product Designer', start: 'May 12, 2026', progress: 0 },
+                      { name: 'Leo Kim', role: 'Account Executive', start: 'Apr 28, 2026', progress: 65 },
+                    ].map(({ name, role, start, progress }) => (
+                      <div key={name} className="bg-white/5 rounded-xl px-4 py-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-medium text-sm">{name}</div>
+                            <div className="text-xs text-zinc-400">{role} · Starts {start}</div>
+                          </div>
+                          <span className="text-xs" style={{ color: 'var(--accent-color)' }}>{progress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: 'var(--accent-color)' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
