@@ -71,15 +71,15 @@ function OctopusChart({ node, expanded, setExpanded, search, expandedAll }: {
     const handleEnter = (e: React.MouseEvent) => { setHovered(n); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setHoverPos({ x: r.left + 95, y: r.top }) }
     const handleLeave = () => { setHovered(null); setHoverPos(null) }
     return (
-      <div onMouseEnter={handleEnter} onMouseLeave={handleLeave} onClick={() => setSelected(n)} className={`cursor-pointer transition-all w-[170px] ${h ? 'ring-2 ring-[#D7FE51]' : ''}`}>
-        <div className={`glass rounded-xl p-2 border ${h ? 'border-[#D7FE51]/60' : 'border-white/10'} hover:border-white/30 transition-all hover:-translate-y-0.5 shadow-xl`}>
+      <div onMouseEnter={handleEnter} onMouseLeave={handleLeave} onClick={() => setSelected(n)} className={`cursor-pointer transition-all w-[170px] ${h ? 'ring-2' : ''}`} style={h ? { outline: '2px solid var(--accent-color)', borderRadius: '12px' } : undefined}>
+        <div className="glass rounded-xl p-2 border hover:border-white/30 transition-all hover:-translate-y-0.5 shadow-xl" style={{ borderColor: h ? 'color-mix(in srgb, var(--accent-color) 60%, transparent)' : 'rgba(255,255,255,0.08)' }}>
           <div className="flex items-start gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base flex-shrink-0 ${n.reportsTo === null ? 'bg-[#D7FE51] text-black' : 'bg-white/10'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base flex-shrink-0 ${n.reportsTo === null ? 'text-black' : 'bg-white/10'}`} style={n.reportsTo === null ? { backgroundColor: 'var(--accent-color)' } : undefined}>
               {n.reportsTo === null ? '👑' : '👤'}
             </div>
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-xs leading-tight truncate" style={{ color: h ? 'var(--accent-color)' : undefined }}>{n.name}</div>
-              <div className="text-[10px] text-[#D7FE51] font-medium truncate">{n.title}</div>
+              <div className="text-[10px] font-medium truncate neon-green">{n.title}</div>
               <div className="text-[9px] text-zinc-500 mt-0.5">{n.dept}</div>
             </div>
           </div>
@@ -880,8 +880,8 @@ export default function App() {
 
   const orgData = {
     id: 'ceo',
-    name: 'Trevor Dixon and Shubham Singh',
-    title: 'Co-CEOs & Co-Founders',
+    name: 'Trevor Dixon',
+    title: 'CEO & Founder',
     dept: 'Executive',
     email: 'co-founders@swiftshift.com',
     reportsTo: null,
@@ -994,6 +994,7 @@ export default function App() {
 
   const themeLabel = theme === 'green' ? 'Green' : theme === 'white' ? 'White' : theme === 'orange' ? 'Orange' : theme === 'cyan' ? 'Cyan' : theme === 'pink' ? 'Pink' : 'Purple'
   const themeDotColor = theme === 'green' ? 'bg-[#D7FE51]' : theme === 'white' ? 'bg-white' : theme === 'orange' ? 'bg-orange-400' : theme === 'cyan' ? 'bg-[#51FEFE]' : theme === 'pink' ? 'bg-[#FE51D7]' : 'bg-[#9B51FE]'
+  const themeAccentHex = theme === 'green' ? '#D7FE51' : theme === 'white' ? '#E5E7EB' : theme === 'orange' ? '#F97316' : theme === 'cyan' ? '#51FEFE' : theme === 'pink' ? '#FE51D7' : '#9B51FE'
 
   // Load users for admin
   useEffect(() => {
@@ -1410,7 +1411,7 @@ export default function App() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
               <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
             </svg>
-            Shifty AI Tax Filing
+            Swifty - AI Tax Filing
           </button>
           <div className="ta-nav-section">Job Applications</div>
           <button
@@ -1442,7 +1443,7 @@ export default function App() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
               <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1a7 7 0 01-7 7H9a7 7 0 01-7-7H1a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/><circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/>
             </svg>
-            Swifty
+            Swifty - AI Assistant
           </button>
         </div>
       </aside>
@@ -1523,8 +1524,8 @@ export default function App() {
                         // Fire confetti once at 100%
                         if (rawProgress >= 1 && !targetRingConfettiFired) {
                           setTimeout(() => {
-                            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: ['#D7FE51', '#39FF14', '#00CC00'] })
-                            confetti({ particleCount: 120, spread: 70, origin: { y: 0.7 }, colors: ['#D7FE51', '#39FF14'] })
+                            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors: [themeAccentHex, '#39FF14', '#00CC00'] })
+                            confetti({ particleCount: 120, spread: 70, origin: { y: 0.7 }, colors: [themeAccentHex, '#39FF14'] })
                           }, 100)
                           setTargetRingConfettiFired(true)
                         }
