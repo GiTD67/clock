@@ -8,6 +8,8 @@ import { toast } from 'sonner'
 import { useTimesheet } from './hooks/useTimesheet'
 import { Rewards } from './components/Rewards'
 import { LootDrop } from './components/LootDrop'
+import { Tour } from './components/Tour'
+import { FeaturePreview } from './components/FeaturePreview'
 
 const API_BASE = (() => {
   const m = window.location.pathname.match(/^(\/hackathon\/preview\/[^/]+)/)
@@ -467,6 +469,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [shockwaveActive] = useState(false)
+  const [showFeaturePreview, setShowFeaturePreview] = useState(false)
 
   const isReturningUser = !!localStorage.getItem('lastEmail')
   const loginAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
@@ -635,6 +638,17 @@ function LoginPage() {
               <a href="#" className="text-zinc-500 hover:text-white transition-colors">Forgot password?</a>
               <a href="signup" className="text-zinc-400 hover:text-white underline underline-offset-4">Create account</a>
             </div>
+
+            {/* Tour button */}
+            <div className="text-center mt-1">
+              <button
+                type="button"
+                onClick={() => setShowFeaturePreview(true)}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                Explore features →
+              </button>
+            </div>
           </form>
 
           {/* Footer hint */}
@@ -648,6 +662,13 @@ function LoginPage() {
       <div className="absolute bottom-6 right-0 p-4 text-[10px] text-zinc-600">
         © 2026 SwiftShift. All rights reserved.
       </div>
+
+      {showFeaturePreview && (
+        <FeaturePreview
+          onClose={() => setShowFeaturePreview(false)}
+          accentHex={loginAccentHex}
+        />
+      )}
     </div>
   )
 }
@@ -662,6 +683,7 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [shockwaveActive] = useState(false)
+  const [showFeaturePreview, setShowFeaturePreview] = useState(false)
   const signupAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -679,6 +701,7 @@ function SignupPage() {
       } else {
         localStorage.setItem('user', JSON.stringify(data))
         localStorage.setItem('lastEmail', email)
+        localStorage.setItem('swiftshift-tour-pending', '1')
         window.location.href = '.'
       }
     } catch {
@@ -843,6 +866,17 @@ function SignupPage() {
             <div className="text-center text-sm pt-1">
               <a href="login" className="text-zinc-400 hover:text-white underline underline-offset-4">Already have an account?</a>
             </div>
+
+            {/* Tour button */}
+            <div className="text-center mt-1">
+              <button
+                type="button"
+                onClick={() => setShowFeaturePreview(true)}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                Explore features →
+              </button>
+            </div>
           </form>
 
           <div className="mt-6 pt-5 border-t border-white/10 text-center text-[10px] text-zinc-500 tracking-[1px]">
@@ -855,6 +889,13 @@ function SignupPage() {
       <div className="absolute bottom-6 right-0 p-4 text-[10px] text-zinc-600">
         © 2026 SwiftShift. All rights reserved.
       </div>
+
+      {showFeaturePreview && (
+        <FeaturePreview
+          onClose={() => setShowFeaturePreview(false)}
+          accentHex={signupAccentHex}
+        />
+      )}
     </div>
   )
 }
@@ -889,6 +930,7 @@ export default function App() {
 
   // Main app
   const [activeView, setActiveView] = useState<View>('clock')
+  const [showTour, setShowTour] = useState(() => localStorage.getItem('swiftshift-tour-pending') === '1')
   const [chatMessage, setChatMessage] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
@@ -1003,6 +1045,13 @@ export default function App() {
   }
 
   useTimesheet() // runs side effects (seeding)
+
+  // Clear tour-pending flag and mark as seen once tour is displayed
+  useEffect(() => {
+    if (showTour) {
+      localStorage.removeItem('swiftshift-tour-pending')
+    }
+  }, [showTour])
 
   // Handle /admin URL
   useEffect(() => {
@@ -1367,6 +1416,12 @@ export default function App() {
                 className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 rounded-t-xl"
               >
                 Profile
+              </button>
+              <button
+                onClick={() => setShowTour(true)}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-white/5"
+              >
+                Take tour
               </button>
               <button
                 className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-zinc-400 cursor-not-allowed"
@@ -2874,6 +2929,17 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Guided tour modal */}
+        {showTour && (
+          <Tour
+            onClose={() => {
+              setShowTour(false)
+              localStorage.setItem('swiftshift-tour-seen', '1')
+            }}
+            accentHex={themeAccentHex}
+          />
+        )}
 
         {/* Clock-out Loot Drop modal */}
         <LootDrop
