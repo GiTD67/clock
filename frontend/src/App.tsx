@@ -950,6 +950,23 @@ export default function App() {
   const [instaJobs, setInstaJobs] = useState<any[]>([])
   const [instaUploading, setInstaUploading] = useState(false)
 
+  // ===== New feature state =====
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null)
+  const [ptoBankHours, setPtoBankHours] = useState<number>(0)
+  const [ptoRequests, setPtoRequests] = useState<any[]>([])
+  const [workSchedule, setWorkSchedule] = useState({ target_hours_per_day: 8, work_start_time: '09:00', work_end_time: '17:00' })
+  const [directDeposit, setDirectDeposit] = useState<any>(null)
+  const [userAvailability, setUserAvailability] = useState<any[]>([])
+  const [shiftSwaps, setShiftSwaps] = useState<any[]>([])
+  const [timesheetSubmissions, setTimesheetSubmissions] = useState<any[]>([])
+  const [showPtoModal, setShowPtoModal] = useState(false)
+  const [showSwapModal, setShowSwapModal] = useState(false)
+  const [profileTab, setProfileTab] = useState<'info' | 'schedule' | 'deposit' | 'availability'>('info')
+  const [depositForm, setDepositForm] = useState({ bank_name: '', routing_number: '', account_number: '', account_type: 'checking' })
+  const [scheduleForm, setScheduleForm] = useState({ target_hours_per_day: 8, work_start_time: '09:00', work_end_time: '17:00' })
+  const [ptoRequestForm, setPtoRequestForm] = useState({ hours: '', reason: '', start_date: '', end_date: '' })
+  const [swapForm, setSwapForm] = useState({ shift_date: '', shift_name: '', reason: '' })
+
   // Grok Tax - document upload + AI-filled 1040
   const [taxUploadedFiles, setTaxUploadedFiles] = useState<string[]>([])
   const [taxFormData, setTaxFormData] = useState<any | null>(null)
@@ -1139,6 +1156,8 @@ export default function App() {
   const earningsMilestoneFiredRef = useRef<Set<number>>(new Set())
   const progressMilestoneFiredRef = useRef<Set<number>>(new Set())
   const loginWelcomeShownRef = useRef(false)
+  const overtimeWarningFiredRef = useRef(false)
+  const paydayNotifiedRef = useRef(false)
 
   // LootDrop modal state (shown after clock out)
   const [showLootDrop, setShowLootDrop] = useState(false)
@@ -1207,12 +1226,14 @@ export default function App() {
             todayMs += activeElapsedMs
           }
           setClockInAt(clockInDate)
+          setActiveSessionId(active.id)
           setBreakStartedAt(null)
           setBreakType(null)
           setBreakMsAccum(0)
           setPaidBreakMsAccum(0)
         } else {
           setClockInAt(null)
+          setActiveSessionId(null)
         }
 
         setTodayWorkedMs(todayMs)
@@ -1327,8 +1348,16 @@ export default function App() {
   const periodLabel = `${period.start.toLocaleDateString([], { month: '2-digit', day: '2-digit', year: 'numeric' })} – ${period.end.toLocaleDateString([], { month: '2-digit', day: '2-digit', year: 'numeric' })}`
   const periodHours = ((periodTotalMs + sessionWorkedMs) / 3600000).toFixed(1)
 
+  // Earnings with overtime (1.5× after 8 hrs)
+  const calcEarningsWithOT = (hoursMs: number, rate: number): number => {
+    const hours = hoursMs / 3600000
+    if (hours <= 8) return hours * rate
+    return 8 * rate + (hours - 8) * rate * 1.5
+  }
+  const periodEarnings = calcEarningsWithOT(periodTotalMs + sessionWorkedMs, clockHourlyRate)
+
   // Actions
-  const handleClockIn = (e?: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClockIn = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     if (!isClockedIn) {
       setClockInAt(now)
       setBreakStartedAt(null)
@@ -1385,6 +1414,22 @@ export default function App() {
       hoursMilestoneFiredRef.current = new Set()
       earningsMilestoneFiredRef.current = new Set()
       progressMilestoneFiredRef.current = new Set()
+      overtimeWarningFiredRef.current = false
+
+      // Persist clock-in to DB
+      if (user?.id) {
+        try {
+          const res = await fetch(`${API_BASE}/api/clock-sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ employee_id: user.id }),
+          })
+          if (res.ok) {
+            const session = await res.json()
+            setActiveSessionId(session.id)
+          }
+        } catch {}
+      }
 
       // Capture button center for ripple origin
       if (e?.currentTarget) {
@@ -1476,7 +1521,7 @@ export default function App() {
     }
   }, [sessionWorkedMs, isClockedIn, isOnBreak, workState])
 
-  const handleClockOut = () => {
+  const handleClockOut = async () => {
     if (isClockedIn) {
       // If currently on an unpaid break, close it first (unpaid breaks deduct from pay)
       let unpaidAccum = breakMsAccum
@@ -1492,12 +1537,35 @@ export default function App() {
       setPaidBreakMsAccum(0)
 
       // Show LootDrop modal with earnings and PTO
-      const ptoAccrualRate = 0.0385
+      const ptoAccrualRate = 1 / 30
       const hoursWorked = session / 3600000
+      const ptoEarned = hoursWorked * ptoAccrualRate
       setLootEarnings(Math.round(hoursWorked * clockHourlyRate * 100) / 100)
-      setLootPtoHours(Math.round(hoursWorked * ptoAccrualRate * 100) / 100)
+      setLootPtoHours(Math.round(ptoEarned * 100) / 100)
       setLootDurationMin(Math.round(session / 60000))
       setShowLootDrop(true)
+
+      // Persist clock-out to DB and accrue PTO
+      if (user?.id) {
+        if (activeSessionId) {
+          try {
+            await fetch(`${API_BASE}/api/clock-sessions/${activeSessionId}`, { method: 'PUT' })
+          } catch {}
+        }
+        setActiveSessionId(null)
+        // Accrue PTO to persistent bank
+        try {
+          const res = await fetch(`${API_BASE}/api/pto/accrue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.id, hours_worked: hoursWorked, accrual_rate: ptoAccrualRate }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            setPtoBankHours(data.total_hours || 0)
+          }
+        } catch {}
+      }
     }
   }
 
@@ -1606,6 +1674,136 @@ export default function App() {
     localStorage.removeItem('user')
     window.location.href = 'login'
   }
+
+  // ===== New feature useEffects =====
+
+  // Load PTO bank balance on mount
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`${API_BASE}/api/pto/balance/${user.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setPtoBankHours(data.total_hours || 0) })
+      .catch(() => {})
+  }, [user?.id])
+
+  // Load PTO requests
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`${API_BASE}/api/pto/requests?user_id=${user.id}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setPtoRequests(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [user?.id])
+
+  // Load work schedule template
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`${API_BASE}/api/work-schedule/${user.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setWorkSchedule(data)
+          setScheduleForm({ target_hours_per_day: data.target_hours_per_day || 8, work_start_time: data.work_start_time || '09:00', work_end_time: data.work_end_time || '17:00' })
+        }
+      })
+      .catch(() => {})
+  }, [user?.id])
+
+  // Load direct deposit info
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`${API_BASE}/api/direct-deposit/${user.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setDirectDeposit(data) })
+      .catch(() => {})
+  }, [user?.id])
+
+  // Load availability settings
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`${API_BASE}/api/availability/${user.id}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setUserAvailability(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [user?.id])
+
+  // Load shift swaps and timesheet submissions when on schedules view
+  useEffect(() => {
+    if (activeView !== 'schedules' || !user?.id) return
+    Promise.all([
+      fetch(`${API_BASE}/api/shift-swaps?user_id=${user.id}`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/api/timesheet-submissions?user_id=${user.id}`).then(r => r.ok ? r.json() : []),
+    ]).then(([swaps, subs]) => {
+      setShiftSwaps(Array.isArray(swaps) ? swaps : [])
+      setTimesheetSubmissions(Array.isArray(subs) ? subs : [])
+    }).catch(() => {})
+  }, [activeView, user?.id])
+
+  // Overtime warning at 7.5 hrs
+  useEffect(() => {
+    if (!isClockedIn) return
+    const hoursWorked = todayTotalMs / 3600000
+    if (hoursWorked >= 7.5 && !overtimeWarningFiredRef.current) {
+      overtimeWarningFiredRef.current = true
+      toast('⚡ 7.5 hours worked!', {
+        description: 'Overtime (1.5×) starts at 8 hours. You\'re almost there!',
+        duration: 8000,
+      })
+    }
+  }, [Math.floor(todayTotalMs / (15 * 60 * 1000))])
+
+  // Paycheck deposit notification (payday = 2nd or last Friday of month)
+  useEffect(() => {
+    if (paydayNotifiedRef.current) return
+    const today = new Date()
+    const todayDateStr = today.toISOString().slice(0, 10)
+    if (today.getDay() !== 5) return // Not Friday
+    if (localStorage.getItem(`payday-notified-${todayDateStr}`)) return
+    const month = today.getMonth()
+    const year = today.getFullYear()
+    let day = 1
+    while (new Date(year, month, day).getDay() !== 5) day++
+    const secondFriday = new Date(year, month, day + 7).toISOString().slice(0, 10)
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    let lastFridayDate = lastDay
+    while (new Date(year, month, lastFridayDate).getDay() !== 5) lastFridayDate--
+    const lastFriday = new Date(year, month, lastFridayDate).toISOString().slice(0, 10)
+    if (todayDateStr === secondFriday || todayDateStr === lastFriday) {
+      paydayNotifiedRef.current = true
+      localStorage.setItem(`payday-notified-${todayDateStr}`, '1')
+      setTimeout(() => {
+        toast.success('💸 Payday!', {
+          description: `Your paycheck is being processed, ${user.first_name}! 🎉`,
+          duration: 10000,
+        })
+        confetti({ particleCount: 100, spread: 60, origin: { y: 0.7 }, colors: ['#FFD700', '#FFA500', themeAccentHex] })
+      }, 2000)
+    }
+  }, [])
+
+  // Clock-in reminder based on work schedule
+  useEffect(() => {
+    if (!workSchedule?.work_start_time || isClockedIn) return
+    const now2 = new Date()
+    const todayKey = `clock-reminder-${now2.toISOString().slice(0, 10)}`
+    if (localStorage.getItem(todayKey)) return
+    const [startH, startM] = workSchedule.work_start_time.split(':').map(Number)
+    const startTime = new Date()
+    startTime.setHours(startH, startM, 0, 0)
+    const diffMs = startTime.getTime() - now2.getTime()
+    if (diffMs > 0 && diffMs < 3600000) {
+      const timer = setTimeout(() => {
+        if (!isClockedIn) {
+          toast(`⏰ Time to clock in!`, {
+            description: `Your scheduled start time is ${workSchedule.work_start_time}`,
+            duration: 15000,
+          })
+          localStorage.setItem(todayKey, '1')
+        }
+      }, diffMs)
+      return () => clearTimeout(timer)
+    }
+  }, [workSchedule?.work_start_time, isClockedIn])
 
   return (
     <div className="ta-app" data-theme={theme}>
@@ -2052,7 +2250,14 @@ export default function App() {
                 <div className="glass rounded-3xl p-8 flex-1">
                   <div className="text-sm uppercase tracking-[2px] text-white mb-3">This pay period</div>
                   <div className="text-lg font-medium mb-2 neon-green">{periodLabel}</div>
-                  <div className="text-sm text-zinc-400 mb-4">Regular hours: <span className="font-mono neon-green">{periodHours}</span> hrs</div>
+                  <div className="text-sm text-zinc-400 mb-1">Regular hours: <span className="font-mono neon-green">{periodHours}</span> hrs</div>
+                  <div className="text-sm text-zinc-400 mb-1">
+                    Earned: <span className="font-mono neon-green">${periodEarnings.toFixed(2)}</span>
+                    {((periodTotalMs + sessionWorkedMs) / 3600000) > 40 && (
+                      <span className="text-amber-400 text-xs ml-1">(incl. OT 1.5×)</span>
+                    )}
+                  </div>
+                  <div className="text-sm text-zinc-400 mb-4">PTO accrued: <span className="font-mono neon-green">{ptoBankHours.toFixed(2)} hrs</span></div>
                   <button
                     onClick={() => navTo('timesheet')}
                     className="text-sm underline decoration-white/30 hover:decoration-white"
@@ -2257,38 +2462,133 @@ export default function App() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h1 className="text-2xl font-semibold neon-green">Schedule Management</h1>
-                  <p className="text-sm text-zinc-400">Manage shifts and employee schedules</p>
+                  <p className="text-sm text-zinc-400">Your upcoming shifts, timesheet submissions, and swap requests</p>
                 </div>
-                <button className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
-                  + Add Shift
+                <button onClick={() => setShowSwapModal(true)} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                  + Request Shift Swap
                 </button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <div key={day} className="glass rounded-2xl p-3">
-                    <div className="text-xs font-semibold text-zinc-400 mb-2 uppercase">{day}</div>
-                    {['Morning 6–2', 'Afternoon 2–10'].map((shift, i) => (
-                      <div key={i} className="text-xs rounded-lg px-2 py-1.5 mb-1.5 cursor-pointer hover:opacity-80 transition-opacity"
-                        style={{ backgroundColor: 'var(--accent-color-dim)', borderLeft: '3px solid var(--accent-color)', color: 'var(--accent-color)' }}>
-                        {shift}
-                        <div className="text-zinc-400 mt-0.5">{i === 0 ? '3 assigned' : '2 assigned'}</div>
-                      </div>
-                    ))}
-                    <div className="text-xs text-zinc-600 mt-2 text-center cursor-pointer hover:text-zinc-400">+ add</div>
-                  </div>
-                ))}
-              </div>
+
+              {/* This week's schedule */}
               <div className="glass rounded-3xl p-6">
-                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Shift Coverage Summary</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {[['Total Shifts This Week', '14'], ['Filled Shifts', '11'], ['Open Shifts', '3']].map(([label, val]) => (
-                    <div key={label} className="bg-white/5 rounded-2xl p-4 text-center">
-                      <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
-                      <div className="text-xs text-zinc-400 mt-1">{label}</div>
-                    </div>
-                  ))}
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>This Week</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
+                    const avail = userAvailability.find(a => a.day_of_week === idx)
+                    const isAvail = avail ? avail.is_available : idx < 5
+                    return (
+                      <div key={day} className="glass rounded-2xl p-3">
+                        <div className="text-xs font-semibold text-zinc-400 mb-2 uppercase">{day}</div>
+                        {isAvail ? (
+                          <div className="text-xs rounded-lg px-2 py-1.5 mb-1.5"
+                            style={{ backgroundColor: 'var(--accent-color-dim)', borderLeft: '3px solid var(--accent-color)', color: 'var(--accent-color)' }}>
+                            {avail?.start_time || workSchedule.work_start_time}–{avail?.end_time || workSchedule.work_end_time}
+                            <div className="text-zinc-400 mt-0.5">Scheduled</div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-zinc-600 py-1.5">Off</div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
+
+              {/* Shift Swap Requests */}
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Shift Swap Requests</h2>
+                {shiftSwaps.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No swap requests yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {shiftSwaps.map(swap => (
+                      <div key={swap.id} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+                        <div>
+                          <div className="text-sm font-medium">{swap.shift_name || 'Shift'} · {swap.shift_date}</div>
+                          <div className="text-xs text-zinc-400">{swap.reason || 'No reason given'}</div>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          swap.status === 'open' ? 'bg-amber-500/20 text-amber-400' :
+                          swap.status === 'accepted' ? 'bg-emerald-500/20 text-emerald-400' :
+                          'bg-red-500/20 text-red-400'}`}>
+                          {swap.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Timesheet Submissions */}
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Timesheet Submissions</h2>
+                {timesheetSubmissions.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No submitted timesheets yet. Submit from the Timesheet tab.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {timesheetSubmissions.map(sub => (
+                      <div key={sub.id} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+                        <div>
+                          <div className="text-sm font-medium">{sub.period_start} – {sub.period_end}</div>
+                          <div className="text-xs text-zinc-400">{sub.total_hours ? `${Number(sub.total_hours).toFixed(1)} hrs` : ''} · Submitted {new Date(sub.submitted_at).toLocaleDateString()}</div>
+                          {sub.manager_notes && <div className="text-xs text-zinc-500 mt-0.5">Note: {sub.manager_notes}</div>}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          sub.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' :
+                          sub.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                          'bg-amber-500/20 text-amber-400'}`}>
+                          {sub.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Shift Swap Modal */}
+              {showSwapModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={() => setShowSwapModal(false)}>
+                  <div className="glass rounded-3xl p-6 max-w-md w-[90%] border border-white/20" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="font-semibold text-lg">Request Shift Swap</div>
+                      <button onClick={() => setShowSwapModal(false)} className="text-zinc-400 hover:text-white text-xl">×</button>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase">Shift Date</label>
+                        <input type="date" value={swapForm.shift_date} onChange={e => setSwapForm(f => ({ ...f, shift_date: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase">Shift Name (optional)</label>
+                        <input type="text" placeholder="Morning, Evening…" value={swapForm.shift_name} onChange={e => setSwapForm(f => ({ ...f, shift_name: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase">Reason</label>
+                        <input type="text" placeholder="Doctor's appointment, vacation…" value={swapForm.reason} onChange={e => setSwapForm(f => ({ ...f, reason: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                      <button onClick={async () => {
+                        if (!user?.id || !swapForm.shift_date) return
+                        const res = await fetch(`${API_BASE}/api/shift-swaps`, {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ requester_id: user.id, ...swapForm }),
+                        })
+                        if (res.ok) {
+                          const data = await res.json()
+                          setShiftSwaps(prev => [data, ...prev])
+                          setShowSwapModal(false)
+                          setSwapForm({ shift_date: '', shift_name: '', reason: '' })
+                          toast.success('Shift swap request submitted!')
+                        }
+                      }} className="w-full py-2.5 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                        Submit Request
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {activeView === 'payroll' && (
@@ -2346,6 +2646,87 @@ export default function App() {
                 </table>
                 </div>
               </div>
+
+              {/* My Paystub (current period) */}
+              {(() => {
+                const periodHrs = (periodTotalMs + sessionWorkedMs) / 3600000
+                const regularHrs = Math.min(periodHrs, 80)
+                const otHrs = Math.max(0, periodHrs - 80)
+                const grossPay = regularHrs * clockHourlyRate + otHrs * clockHourlyRate * 1.5
+                const federalTax = grossPay * 0.22
+                const stateTax = grossPay * 0.07
+                const fica = grossPay * 0.0765
+                const netPay = grossPay - federalTax - stateTax - fica
+                return (
+                  <div className="glass rounded-3xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold" style={{ color: 'var(--accent-color)' }}>My Paystub — {periodLabel}</h2>
+                      <button onClick={() => window.print()} className="text-xs px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/5">
+                        Print / Download
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm mb-4">
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <div className="text-zinc-400 text-xs mb-1">Gross Pay</div>
+                        <div className="font-mono text-xl font-semibold" style={{ color: 'var(--accent-color)' }}>${grossPay.toFixed(2)}</div>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <div className="text-zinc-400 text-xs mb-1">Net Pay (est.)</div>
+                        <div className="font-mono text-xl font-semibold text-emerald-400">${netPay.toFixed(2)}</div>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <div className="text-zinc-400 text-xs mb-1">Hours</div>
+                        <div className="font-mono text-xl">{regularHrs.toFixed(1)} reg{otHrs > 0 ? ` + ${otHrs.toFixed(1)} OT` : ''}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-sm border-t border-white/10 pt-3">
+                      {([['Federal Tax (22%)', federalTax], ['State Tax (7%)', stateTax], ['FICA (7.65%)', fica]] as [string, number][]).map(([label, amt]) => (
+                        <div key={label} className="flex justify-between text-zinc-400">
+                          <span>{label}</span>
+                          <span>-${amt.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-zinc-600 mt-3">Estimated deductions. Actual paycheck may vary.</p>
+                  </div>
+                )
+              })()}
+
+              {/* Tax Withholding Calculator */}
+              {(() => {
+                const annualHours = (workSchedule.target_hours_per_day || 8) * 260
+                const annualGross = annualHours * clockHourlyRate
+                const brackets2026 = [
+                  { max: 11600, rate: 0.10 }, { max: 47150, rate: 0.12 }, { max: 100525, rate: 0.22 },
+                  { max: 191950, rate: 0.24 }, { max: 243725, rate: 0.32 }, { max: 609350, rate: 0.35 }, { max: Infinity, rate: 0.37 },
+                ]
+                let fedTaxAnnual = 0; let prev = 0
+                for (const b of brackets2026) {
+                  if (annualGross <= prev) break
+                  fedTaxAnnual += (Math.min(annualGross, b.max) - prev) * b.rate
+                  prev = b.max
+                }
+                const effectiveRate = annualGross > 0 ? (fedTaxAnnual / annualGross) * 100 : 0
+                return (
+                  <div className="glass rounded-3xl p-6">
+                    <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Tax Withholding Calculator</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                      {([
+                        ['Annual Gross (est.)', `$${annualGross.toLocaleString(undefined, {maximumFractionDigits: 0})}`],
+                        ['Fed. Tax (est.)', `$${fedTaxAnnual.toFixed(0)}`],
+                        ['Effective Rate', `${effectiveRate.toFixed(1)}%`],
+                        ['Per Paycheck Tax', `$${(fedTaxAnnual / 26).toFixed(2)}`],
+                      ] as [string, string][]).map(([label, val]) => (
+                        <div key={label} className="bg-white/5 rounded-xl p-3">
+                          <div className="text-zinc-400 text-xs mb-1">{label}</div>
+                          <div className="font-mono text-lg font-semibold">{val}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-zinc-600 mt-3">Based on 2026 single filer brackets. Update your hourly rate and target hours in Profile → Work Schedule.</p>
+                  </div>
+                )
+              })()}
             </div>
           )}
           {activeView === 'reports' && (
@@ -2388,43 +2769,131 @@ export default function App() {
           )}
           {activeView === 'leaves' && (
             <div className="max-w-5xl mx-auto space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h1 className="text-2xl font-semibold neon-green">Leave Management</h1>
-                  <p className="text-sm text-zinc-400">Manage PTO requests and absence tracking</p>
+                  <p className="text-sm text-zinc-400">PTO bank, payout calculator, and request history</p>
                 </div>
+                <button onClick={() => setShowPtoModal(true)} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                  + Request PTO
+                </button>
               </div>
+
+              {/* PTO Bank Summary */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[['Pending Requests', '5'], ['Approved This Month', '12'], ['Denied This Month', '2'], ['Avg PTO Balance', '14.2 days']].map(([label, val]) => (
-                  <div key={label} className="glass rounded-2xl p-4 text-center">
-                    <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val}</div>
-                    <div className="text-xs text-zinc-400 mt-1">{label}</div>
+                {[
+                  ['PTO Balance', `${ptoBankHours.toFixed(2)} hrs`],
+                  ['Payout Value', `$${(ptoBankHours * clockHourlyRate).toFixed(2)}`],
+                  ['Accrual Rate', '1 hr / 30 hrs worked'],
+                  ['My Requests', String(ptoRequests.length)],
+                ].map(([label, val]) => (
+                  <div key={label as string} className="glass rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold" style={{ color: 'var(--accent-color)' }}>{val as string}</div>
+                    <div className="text-xs text-zinc-400 mt-1">{label as string}</div>
                   </div>
                 ))}
               </div>
+
+              {/* PTO Payout Calculator */}
               <div className="glass rounded-3xl p-6">
-                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>Pending Leave Requests</h2>
-                <div className="space-y-3">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>PTO Payout Calculator</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { name: 'Parker Kim', type: 'Vacation', dates: 'May 5–9, 2026', days: 5, status: 'Pending' },
-                    { name: 'Quinn Torres', type: 'Sick Leave', dates: 'Apr 24, 2026', days: 1, status: 'Pending' },
-                    { name: 'Skyler Reed', type: 'Personal', dates: 'May 12, 2026', days: 1, status: 'Pending' },
-                    { name: 'Avery Lane', type: 'Vacation', dates: 'May 19–23, 2026', days: 5, status: 'Pending' },
-                    { name: 'Dakota Lane', type: 'Bereavement', dates: 'Apr 25–27, 2026', days: 3, status: 'Pending' },
-                  ].map(({ name, type, dates, days }) => (
-                    <div key={name} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
-                      <div>
-                        <div className="font-medium">{name}</div>
-                        <div className="text-xs text-zinc-400">{type} · {dates} · {days} day{days > 1 ? 's' : ''}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="px-3 py-1 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors">Approve</button>
-                        <button className="px-3 py-1 rounded-lg text-xs font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">Deny</button>
-                      </div>
+                    ['Current Balance', `${ptoBankHours.toFixed(2)} hrs`, `= $${(ptoBankHours * clockHourlyRate).toFixed(2)}`],
+                    ['If you work 40 more hrs', `+${(40 / 30).toFixed(2)} hrs`, `+$${((40 / 30) * clockHourlyRate).toFixed(2)}`],
+                    ['If you work 80 more hrs', `+${(80 / 30).toFixed(2)} hrs`, `+$${((80 / 30) * clockHourlyRate).toFixed(2)}`],
+                  ].map(([label, hrs, val]) => (
+                    <div key={label as string} className="bg-white/5 rounded-2xl p-4">
+                      <div className="text-xs text-zinc-500 mb-1">{label as string}</div>
+                      <div className="font-mono text-lg font-semibold" style={{ color: 'var(--accent-color)' }}>{hrs as string}</div>
+                      <div className="text-sm text-zinc-400">{val as string}</div>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* My PTO Requests */}
+              <div className="glass rounded-3xl p-6">
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--accent-color)' }}>My PTO Requests</h2>
+                {ptoRequests.length === 0 ? (
+                  <p className="text-sm text-zinc-500">No PTO requests yet. Click "+ Request PTO" to submit one.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {ptoRequests.map(req => (
+                      <div key={req.id} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+                        <div>
+                          <div className="text-sm font-medium">{req.hours} hrs · {req.start_date || 'No date'}{req.end_date && req.end_date !== req.start_date ? ` – ${req.end_date}` : ''}</div>
+                          <div className="text-xs text-zinc-400">{req.reason || 'No reason given'}</div>
+                          {req.manager_notes && <div className="text-xs text-zinc-500 mt-0.5">Manager: {req.manager_notes}</div>}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          req.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' :
+                          req.status === 'denied' ? 'bg-red-500/20 text-red-400' :
+                          'bg-amber-500/20 text-amber-400'}`}>
+                          {req.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* PTO Request Modal */}
+              {showPtoModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80" onClick={() => setShowPtoModal(false)}>
+                  <div className="glass rounded-3xl p-6 max-w-md w-[90%] border border-white/20" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="font-semibold text-lg">Request PTO</div>
+                      <button onClick={() => setShowPtoModal(false)} className="text-zinc-400 hover:text-white text-xl">×</button>
+                    </div>
+                    <p className="text-sm text-zinc-400 mb-4">Your PTO balance: <span className="font-semibold" style={{ color: 'var(--accent-color)' }}>{ptoBankHours.toFixed(2)} hrs</span></p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase">Hours Requested</label>
+                        <input type="number" min={1} step={0.5} placeholder="8" value={ptoRequestForm.hours}
+                          onChange={e => setPtoRequestForm(f => ({ ...f, hours: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1 uppercase">Start Date</label>
+                          <input type="date" value={ptoRequestForm.start_date}
+                            onChange={e => setPtoRequestForm(f => ({ ...f, start_date: e.target.value }))}
+                            className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-zinc-500 mb-1 uppercase">End Date</label>
+                          <input type="date" value={ptoRequestForm.end_date}
+                            onChange={e => setPtoRequestForm(f => ({ ...f, end_date: e.target.value }))}
+                            className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase">Reason (optional)</label>
+                        <input type="text" placeholder="Vacation, personal day…" value={ptoRequestForm.reason}
+                          onChange={e => setPtoRequestForm(f => ({ ...f, reason: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                      <button onClick={async () => {
+                        if (!user?.id || !ptoRequestForm.hours) return
+                        const res = await fetch(`${API_BASE}/api/pto/requests`, {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ user_id: user.id, ...ptoRequestForm }),
+                        })
+                        if (res.ok) {
+                          const data = await res.json()
+                          setPtoRequests(prev => [data, ...prev])
+                          setShowPtoModal(false)
+                          setPtoRequestForm({ hours: '', reason: '', start_date: '', end_date: '' })
+                          toast.success('PTO request submitted!')
+                        }
+                      }} className="w-full py-2.5 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                        Submit Request
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {activeView === 'compliance' && (
@@ -3021,44 +3490,177 @@ export default function App() {
             </div>
           )}
           {activeView === 'profile' && (
-            <div className="max-w-5xl mx-auto">
-              <div className="glass rounded-3xl p-8">
-                <h1 className="text-2xl font-semibold mb-6 neon-green">Profile</h1>
-
-                <div className="flex items-center gap-6 mb-8">
-                  <div className="w-24 h-24 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <div className="max-w-5xl mx-auto space-y-4">
+              <div className="glass rounded-3xl p-6">
+                <div className="flex items-center gap-5 mb-6">
+                  <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
                     </svg>
                   </div>
                   <div>
                     <div className="text-2xl font-semibold">{user.first_name} {user.last_name}</div>
-                    <div className="text-sm text-zinc-400 mt-1">{user.job_role || 'Employee'}</div>
+                    <div className="text-sm text-zinc-400 mt-1">{user.job_role || 'Employee'} · {user.email}</div>
                   </div>
+                </div>
+                {/* Tab bar */}
+                <div className="flex gap-1 mb-6 bg-white/5 rounded-2xl p-1 w-fit">
+                  {(['info', 'schedule', 'deposit', 'availability'] as const).map(tab => (
+                    <button key={tab} onClick={() => setProfileTab(tab)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${profileTab === tab ? 'text-black' : 'text-zinc-400 hover:text-white'}`}
+                      style={profileTab === tab ? { backgroundColor: 'var(--accent-color)' } : undefined}>
+                      {tab === 'info' ? 'Info' : tab === 'schedule' ? 'Work Schedule' : tab === 'deposit' ? 'Direct Deposit' : 'Availability'}
+                    </button>
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="glass rounded-2xl p-4">
-                    <div className="text-xs uppercase tracking-[1px] text-zinc-500 mb-1">Email</div>
-                    <div className="text-base">{user.email || ''}</div>
+                {profileTab === 'info' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[['Email', user.email || '—'], ['Manager', user.manager_name || '—'], ['User ID', user.id], ['Role', user.job_role || '—'], ['Hourly Rate', `$${clockHourlyRate.toFixed(2)}/hr`], ['Employment', user.is_fulltime ? 'Full-time' : 'Part-time']].map(([label, val]) => (
+                      <div key={label as string} className="glass rounded-2xl p-4">
+                        <div className="text-xs uppercase tracking-[1px] text-zinc-500 mb-1">{label as string}</div>
+                        <div className="text-base font-mono">{String(val)}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="glass rounded-2xl p-4">
-                    <div className="text-xs uppercase tracking-[1px] text-zinc-500 mb-1">Manager</div>
-                    <div className="text-base">{user.manager_name || ''}</div>
-                  </div>
-                  <div className="glass rounded-2xl p-4">
-                    <div className="text-xs uppercase tracking-[1px] text-zinc-500 mb-1">User ID</div>
-                    <div className="text-base font-mono">{user.id}</div>
-                  </div>
-                  <div className="glass rounded-2xl p-4">
-                    <div className="text-xs uppercase tracking-[1px] text-zinc-500 mb-1">Role</div>
-                    <div className="text-base">{user.job_role || ''}</div>
-                  </div>
-                </div>
+                )}
 
-                <div className="mt-6 text-xs text-zinc-500">
-                  Profile information is pulled from your account. Contact HR to update.
-                </div>
+                {profileTab === 'schedule' && (
+                  <div className="space-y-4 max-w-md">
+                    <p className="text-sm text-zinc-400">Set your target hours and default work times. The clock-in reminder uses your start time.</p>
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">Target Hours / Day</label>
+                      <input type="number" min={1} max={24} step={0.5} value={scheduleForm.target_hours_per_day}
+                        onChange={e => setScheduleForm(f => ({ ...f, target_hours_per_day: parseFloat(e.target.value) || 8 }))}
+                        className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">Start Time</label>
+                        <input type="time" value={scheduleForm.work_start_time}
+                          onChange={e => setScheduleForm(f => ({ ...f, work_start_time: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">End Time</label>
+                        <input type="time" value={scheduleForm.work_end_time}
+                          onChange={e => setScheduleForm(f => ({ ...f, work_end_time: e.target.value }))}
+                          className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                      </div>
+                    </div>
+                    <button onClick={async () => {
+                      if (!user?.id) return
+                      await fetch(`${API_BASE}/api/work-schedule/${user.id}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(scheduleForm),
+                      })
+                      setWorkSchedule(scheduleForm)
+                      toast.success('Work schedule saved!')
+                    }} className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                      Save Schedule
+                    </button>
+                  </div>
+                )}
+
+                {profileTab === 'deposit' && (
+                  <div className="space-y-4 max-w-md">
+                    <p className="text-sm text-zinc-400">Your direct deposit information is encrypted and stored securely.</p>
+                    {directDeposit?.bank_name && (
+                      <div className="glass rounded-2xl p-4 text-sm text-zinc-300">
+                        Current: <span className="text-white font-medium">{directDeposit.bank_name}</span> · {directDeposit.account_type} · {directDeposit.account_number_masked || '****'}
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">Bank Name</label>
+                      <input type="text" placeholder="Chase, Bank of America…" value={depositForm.bank_name}
+                        onChange={e => setDepositForm(f => ({ ...f, bank_name: e.target.value }))}
+                        className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">Routing Number</label>
+                      <input type="text" placeholder="9 digits" maxLength={9} value={depositForm.routing_number}
+                        onChange={e => setDepositForm(f => ({ ...f, routing_number: e.target.value.replace(/\D/g,'') }))}
+                        className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">Account Number</label>
+                      <input type="text" placeholder="Account number" value={depositForm.account_number}
+                        onChange={e => setDepositForm(f => ({ ...f, account_number: e.target.value.replace(/\D/g,'') }))}
+                        className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wide">Account Type</label>
+                      <select value={depositForm.account_type} onChange={e => setDepositForm(f => ({ ...f, account_type: e.target.value }))}
+                        className="glass-input w-full rounded-xl px-4 py-2.5 text-sm border border-white/10 focus:border-white/30 outline-none bg-black/40">
+                        <option value="checking">Checking</option>
+                        <option value="savings">Savings</option>
+                      </select>
+                    </div>
+                    <button onClick={async () => {
+                      if (!user?.id) return
+                      await fetch(`${API_BASE}/api/direct-deposit/${user.id}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(depositForm),
+                      })
+                      setDirectDeposit({ ...depositForm, account_number_masked: '****' + depositForm.account_number.slice(-4) })
+                      setDepositForm(f => ({ ...f, account_number: '' }))
+                      toast.success('Direct deposit info saved!')
+                    }} className="px-5 py-2.5 rounded-xl text-sm font-medium" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                      Save Direct Deposit
+                    </button>
+                    <p className="text-[10px] text-zinc-600">Bank info is stored encrypted. Used for paycheck deposits.</p>
+                  </div>
+                )}
+
+                {profileTab === 'availability' && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-zinc-400">Set your weekly availability so your manager can schedule you accurately.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((day, idx) => {
+                        const saved = userAvailability.find(a => a.day_of_week === idx)
+                        const isAvail = saved ? saved.is_available : idx < 5
+                        const startT = saved?.start_time || '09:00'
+                        const endT = saved?.end_time || '17:00'
+                        return (
+                          <div key={day} className="glass rounded-xl p-3 flex items-center gap-3">
+                            <div className="w-24 text-sm font-medium">{day}</div>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" defaultChecked={isAvail}
+                                onChange={async e => {
+                                  if (!user?.id) return
+                                  await fetch(`${API_BASE}/api/availability/${user.id}`, {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ days: [{ day_of_week: idx, start_time: startT, end_time: endT, is_available: e.target.checked }] }),
+                                  })
+                                  toast.success(`${day} updated`)
+                                }}
+                                className="w-4 h-4 accent-green-400" />
+                              <span className="text-xs text-zinc-400">Available</span>
+                            </label>
+                            <input type="time" defaultValue={startT} className="glass-input text-xs rounded-lg px-2 py-1 border border-white/10 outline-none w-20"
+                              onBlur={async e => {
+                                if (!user?.id) return
+                                await fetch(`${API_BASE}/api/availability/${user.id}`, {
+                                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ days: [{ day_of_week: idx, start_time: e.target.value, end_time: endT, is_available: isAvail }] }),
+                                })
+                              }} />
+                            <span className="text-xs text-zinc-600">–</span>
+                            <input type="time" defaultValue={endT} className="glass-input text-xs rounded-lg px-2 py-1 border border-white/10 outline-none w-20"
+                              onBlur={async e => {
+                                if (!user?.id) return
+                                await fetch(`${API_BASE}/api/availability/${user.id}`, {
+                                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ days: [{ day_of_week: idx, start_time: startT, end_time: e.target.value, is_available: isAvail }] }),
+                                })
+                              }} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className="text-xs text-zinc-600">Changes save automatically on blur.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
