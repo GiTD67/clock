@@ -12,6 +12,8 @@ import { LootDrop } from './components/LootDrop'
 import { GamificationHUD } from './components/GamificationHUD'
 import { AchievementsPanel } from './components/AchievementsPanel'
 import { LevelUpModal } from './components/LevelUpModal'
+import { Tour } from './components/Tour'
+import { FeaturePreview } from './components/FeaturePreview'
 
 const API_BASE = (() => {
   const m = window.location.pathname.match(/^(\/hackathon\/preview\/[^/]+)/)
@@ -280,11 +282,16 @@ function TimesheetView({ user, onTimesheetSubmit }: { user: any; onTimesheetSubm
 
   const handleSaveDraft = () => {
     setDraftMessage('Draft saved')
+    toast.success('Draft saved! ✓', { description: 'Your hours are saved. Submit when ready.' })
   }
 
   const handleSubmit = () => {
     if (certified && !isSubmitted) {
       setSubmittedPeriods(prev => new Set(prev).add(periodId))
+      toast.success('Timesheet submitted! 🎉', { description: 'Your manager will review it shortly.' })
+      confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } })
+      setTimeout(() => confetti({ particleCount: 100, spread: 70, angle: 75, origin: { x: 0.2, y: 0.6 } }), 150)
+      setTimeout(() => confetti({ particleCount: 100, spread: 70, angle: 105, origin: { x: 0.8, y: 0.6 } }), 300)
       onTimesheetSubmit?.()
     }
   }
@@ -474,6 +481,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [shockwaveActive] = useState(false)
+  const [showFeaturePreview, setShowFeaturePreview] = useState(false)
 
   const isReturningUser = !!localStorage.getItem('lastEmail')
   const loginAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
@@ -642,6 +650,17 @@ function LoginPage() {
               <a href="#" className="text-zinc-500 hover:text-white transition-colors">Forgot password?</a>
               <a href="signup" className="text-zinc-400 hover:text-white underline underline-offset-4">Create account</a>
             </div>
+
+            {/* Tour button */}
+            <div className="text-center mt-1">
+              <button
+                type="button"
+                onClick={() => setShowFeaturePreview(true)}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                Explore features →
+              </button>
+            </div>
           </form>
 
           {/* Footer hint */}
@@ -655,6 +674,13 @@ function LoginPage() {
       <div className="absolute bottom-6 right-0 p-4 text-[10px] text-zinc-600">
         © 2026 SwiftShift. All rights reserved.
       </div>
+
+      {showFeaturePreview && (
+        <FeaturePreview
+          onClose={() => setShowFeaturePreview(false)}
+          accentHex={loginAccentHex}
+        />
+      )}
     </div>
   )
 }
@@ -669,6 +695,7 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [shockwaveActive] = useState(false)
+  const [showFeaturePreview, setShowFeaturePreview] = useState(false)
   const signupAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -686,6 +713,7 @@ function SignupPage() {
       } else {
         localStorage.setItem('user', JSON.stringify(data))
         localStorage.setItem('lastEmail', email)
+        localStorage.setItem('swiftshift-tour-pending', '1')
         window.location.href = '.'
       }
     } catch {
@@ -850,6 +878,17 @@ function SignupPage() {
             <div className="text-center text-sm pt-1">
               <a href="login" className="text-zinc-400 hover:text-white underline underline-offset-4">Already have an account?</a>
             </div>
+
+            {/* Tour button */}
+            <div className="text-center mt-1">
+              <button
+                type="button"
+                onClick={() => setShowFeaturePreview(true)}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                Explore features →
+              </button>
+            </div>
           </form>
 
           <div className="mt-6 pt-5 border-t border-white/10 text-center text-[10px] text-zinc-500 tracking-[1px]">
@@ -862,6 +901,13 @@ function SignupPage() {
       <div className="absolute bottom-6 right-0 p-4 text-[10px] text-zinc-600">
         © 2026 SwiftShift. All rights reserved.
       </div>
+
+      {showFeaturePreview && (
+        <FeaturePreview
+          onClose={() => setShowFeaturePreview(false)}
+          accentHex={signupAccentHex}
+        />
+      )}
     </div>
   )
 }
@@ -896,6 +942,7 @@ export default function App() {
 
   // Main app
   const [activeView, setActiveView] = useState<View>('clock')
+  const [showTour, setShowTour] = useState(() => localStorage.getItem('swiftshift-tour-pending') === '1')
   const [chatMessage, setChatMessage] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
@@ -1860,15 +1907,6 @@ export default function App() {
               isClockedIn={isClockedIn}
               theme={theme}
               user={user}
-              gamification={{
-                level: gam.level,
-                levelTitle: gam.levelTitle,
-                xp: gam.xp,
-                xpThisLevel: gam.xpThisLevel,
-                xpToNextLevel: gam.xpToNextLevel,
-                achievements: gam.achievements,
-                onOpenAchievements: () => setShowAchievements(true),
-              }}
             />
           )}
           {activeView === 'admin' && (
@@ -3032,6 +3070,18 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Guided tour modal */}
+        {showTour && (
+          <Tour
+            onClose={() => {
+              setShowTour(false)
+              localStorage.removeItem('swiftshift-tour-pending')
+              localStorage.setItem('swiftshift-tour-seen', '1')
+            }}
+            accentHex={themeAccentHex}
+          />
+        )}
 
         {/* Clock-out Loot Drop modal */}
         <LootDrop
