@@ -6,8 +6,12 @@ import confetti from 'canvas-confetti'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useTimesheet } from './hooks/useTimesheet'
+import { useGamification } from './hooks/useGamification'
 import { Rewards } from './components/Rewards'
 import { LootDrop } from './components/LootDrop'
+import { GamificationHUD } from './components/GamificationHUD'
+import { AchievementsPanel } from './components/AchievementsPanel'
+import { LevelUpModal } from './components/LevelUpModal'
 
 const API_BASE = (() => {
   const m = window.location.pathname.match(/^(\/hackathon\/preview\/[^/]+)/)
@@ -209,7 +213,7 @@ function usePayPeriodRange(periodOffset: number) {
 }
 
 // ===== TimesheetView component =====
-function TimesheetView({ user }: { user: any }) {
+function TimesheetView({ user, onTimesheetSubmit }: { user: any; onTimesheetSubmit?: () => void }) {
   const [periodOffset, setPeriodOffset] = useState(0)
   const [entries, setEntries] = useState<Record<string, string>>({})
   const [certified, setCertified] = useState(false)
@@ -281,6 +285,7 @@ function TimesheetView({ user }: { user: any }) {
   const handleSubmit = () => {
     if (certified && !isSubmitted) {
       setSubmittedPeriods(prev => new Set(prev).add(periodId))
+      onTimesheetSubmit?.()
     }
   }
 
@@ -1081,6 +1086,10 @@ export default function App() {
     return localStorage.getItem('lastStreakDate') || ''
   })
 
+  // Gamification system
+  const gam = useGamification()
+  const [showAchievements, setShowAchievements] = useState(false)
+
   // Restore clock state from DB on login / user change
   useEffect(() => {
     const uid = user?.id
@@ -1179,6 +1188,20 @@ export default function App() {
         setLastStreakDate(todayStr)
         localStorage.setItem('streak', String(newStreak))
         localStorage.setItem('lastStreakDate', todayStr)
+        // Award streak-based achievements
+        if (newStreak >= 3) gam.unlockAchievement('streak_3')
+        if (newStreak >= 7) gam.unlockAchievement('streak_7')
+        if (newStreak >= 30) gam.unlockAchievement('streak_30')
+      }
+
+      // XP for clocking in
+      gam.unlockAchievement('first_clock_in')
+      gam.addXp(50, 'Clock In')
+      gam.trackAction('clock_in')
+      // Early bird achievement (before 9am)
+      if (now.getHours() < 9) {
+        gam.unlockAchievement('early_bird')
+        gam.trackAction('early_clock_in')
       }
 
       // Capture button center for ripple origin
@@ -1235,6 +1258,15 @@ export default function App() {
       setLootPtoHours(Math.round(hoursWorked * ptoAccrualRate * 100) / 100)
       setLootDurationMin(Math.round(session / 60000))
       setShowLootDrop(true)
+
+      // XP for clocking out
+      const xpEarned = hoursWorked >= 8 ? 250 : hoursWorked >= 4 ? 100 : 25
+      gam.addXp(xpEarned, 'Clock Out')
+      gam.trackAction('hours_worked', hoursWorked)
+      // Achievements
+      if (hoursWorked >= 8 && hoursWorked <= 9) gam.unlockAchievement('perfect_day')
+      if (hoursWorked >= 10) gam.unlockAchievement('overtime')
+      if (now.getHours() >= 20) gam.unlockAchievement('night_owl')
     }
   }
 
@@ -1247,6 +1279,15 @@ export default function App() {
     const fileId = attachedFile?.file_id
     setChatMessage('')
     setAttachedFile(null)
+
+    // XP + achievements for chatting
+    gam.addXp(25, 'AI Chat')
+    gam.unlockAchievement('ai_chat')
+    gam.trackAction('chat_message')
+    const totalChats = parseInt(localStorage.getItem('gam_total_chats') || '0', 10) + 1
+    localStorage.setItem('gam_total_chats', String(totalChats))
+    if (totalChats >= 10) gam.unlockAchievement('ai_chat_10')
+
     try {
       const res = await fetch(`${API_BASE}/api/grok/chat`, {
         method: 'POST',
@@ -1329,6 +1370,8 @@ export default function App() {
       if (res.ok) {
         setTaxFormData(data)
         if (data.source_files?.length) setTaxUploadedFiles(data.source_files)
+        gam.addXp(300, 'Tax Filing Complete')
+        gam.unlockAchievement('tax_filing')
       } else {
         alert(data.error || 'Failed to fill 1040')
       }
@@ -1352,6 +1395,15 @@ export default function App() {
           <span>SwiftShift</span>
         </div>
         <div className="ta-navbar-user">
+          {/* Gamification HUD: XP bar + level */}
+          <GamificationHUD
+            level={gam.level}
+            levelTitle={gam.levelTitle}
+            xpThisLevel={gam.xpThisLevel}
+            xpToNextLevel={gam.xpToNextLevel}
+            xpPopups={gam.xpPopups}
+            onOpenAchievements={() => setShowAchievements(true)}
+          />
           {/* Daily streak counter */}
           <div className="flex items-center gap-1.5 px-3 py-1 text-sm text-white/60 border border-white/10 rounded-full">
             <span style={{ color: 'var(--accent-color)' }}>{streak > 0 ? '🔥' : '○'}</span>
@@ -1435,7 +1487,7 @@ export default function App() {
           </button>
           <button
             className={`ta-nav-btn ${activeView === 'orgchart' ? 'active' : ''}`}
-            onClick={() => setActiveView('orgchart')}
+            onClick={() => { setActiveView('orgchart'); gam.unlockAchievement('org_explorer'); gam.addXp(15, 'Org Chart Explored') }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
               <rect x="8" y="2" width="8" height="4" rx="1"/><rect x="2" y="14" width="8" height="4" rx="1"/><rect x="14" y="14" width="8" height="4" rx="1"/><line x1="12" y1="6" x2="12" y2="11"/><line x1="6" y1="14" x2="6" y2="11"/><line x1="18" y1="14" x2="18" y2="11"/><line x1="6" y1="11" x2="18" y2="11"/>
@@ -1733,13 +1785,47 @@ export default function App() {
                     See rewards →
                   </button>
                 </div>
+
+                {/* Daily Challenges widget */}
+                <div className="glass rounded-3xl p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm uppercase tracking-[2px] text-white">Daily Challenges</div>
+                    <button onClick={() => setShowAchievements(true)} className="text-[10px] text-zinc-500 hover:text-zinc-300 underline">All →</button>
+                  </div>
+                  <div className="space-y-2">
+                    {gam.dailyChallenges.map(c => (
+                      <div key={c.id} className={`rounded-xl p-2.5 flex items-center gap-2.5 ${c.completed ? 'opacity-70' : ''}`} style={{ background: c.completed ? 'color-mix(in srgb, var(--accent-color) 8%, transparent)' : 'rgba(255,255,255,0.04)' }}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold`}
+                          style={c.completed ? { backgroundColor: 'var(--accent-color)', color: '#000' } : { backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                          {c.completed ? '✓' : '○'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium truncate">{c.title}</div>
+                          {!c.completed && c.goal > 1 && (
+                            <div className="mt-0.5 h-1 bg-white/10 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${(c.progress / c.goal) * 100}%`, backgroundColor: 'var(--accent-color)' }} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-[10px] font-semibold flex-shrink-0" style={{ color: 'var(--accent-color)' }}>+{c.xpReward}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </aside>
             </div>
             </>
           )}
 
           {activeView === 'timesheet' && (
-            <TimesheetView user={user} />
+            <TimesheetView user={user} onTimesheetSubmit={() => {
+              gam.addXp(200, 'Timesheet Submitted')
+              gam.unlockAchievement('timesheet_submit')
+              gam.trackAction('timesheet_update')
+              const submits = parseInt(localStorage.getItem('gam_timesheet_submits') || '0', 10) + 1
+              localStorage.setItem('gam_timesheet_submits', String(submits))
+              if (submits >= 3) gam.unlockAchievement('timesheet_3')
+            }} />
           )}
           {activeView === 'rewards' && (
             <Rewards
@@ -1748,6 +1834,15 @@ export default function App() {
               isClockedIn={isClockedIn}
               theme={theme}
               user={user}
+              gamification={{
+                level: gam.level,
+                levelTitle: gam.levelTitle,
+                xp: gam.xp,
+                xpThisLevel: gam.xpThisLevel,
+                xpToNextLevel: gam.xpToNextLevel,
+                achievements: gam.achievements,
+                onOpenAchievements: () => setShowAchievements(true),
+              }}
             />
           )}
           {activeView === 'admin' && (
@@ -2649,14 +2744,45 @@ export default function App() {
                 <h1 className="text-2xl font-semibold mb-6 neon-green">Profile</h1>
 
                 <div className="flex items-center gap-6 mb-8">
-                  <div className="w-24 h-24 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                      </svg>
+                    </div>
+                    {/* Level badge on avatar */}
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-black" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                      {gam.level}
+                    </div>
                   </div>
                   <div>
                     <div className="text-2xl font-semibold">{user.first_name} {user.last_name}</div>
-                    <div className="text-sm text-zinc-400 mt-1">{user.job_role || 'Employee'}</div>
+                    <div className="text-sm mt-1" style={{ color: 'var(--accent-color)' }}>{gam.levelTitle}</div>
+                    <div className="text-sm text-zinc-400">{user.job_role || 'Employee'}</div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="text-xs text-zinc-500">{gam.xp.toLocaleString()} XP</div>
+                      <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100,(gam.xpThisLevel/gam.xpToNextLevel)*100)}%`, backgroundColor: 'var(--accent-color)' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Achievements showcase */}
+                <div className="glass rounded-2xl p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm font-semibold" style={{ color: 'var(--accent-color)' }}>🏆 Achievements</div>
+                    <button onClick={() => setShowAchievements(true)} className="text-xs text-zinc-500 hover:text-zinc-300 underline">View all →</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {gam.achievements.filter(a => a.unlockedAt).slice(0, 8).map(a => (
+                      <div key={a.id} title={a.name} className="w-10 h-10 rounded-xl flex items-center justify-center text-xl cursor-default" style={{ background: 'color-mix(in srgb, var(--accent-color) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-color) 25%, transparent)' }}>
+                        {a.icon}
+                      </div>
+                    ))}
+                    {gam.achievements.filter(a => a.unlockedAt).length === 0 && (
+                      <div className="text-xs text-zinc-500">No achievements yet — start clocking in!</div>
+                    )}
                   </div>
                 </div>
 
@@ -2735,6 +2861,8 @@ export default function App() {
                         if (mdata.jobs) {
                           const enriched = mdata.jobs.map((r: any) => ({ ...r.job, score: r.score, label: r.label }));
                           setInstaJobs(enriched);
+                          gam.addXp(75, 'Resume Uploaded')
+                          gam.unlockAchievement('resume_upload')
                         }
                       }
                     } catch {}
@@ -2789,7 +2917,7 @@ export default function App() {
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-zinc-500">{isExpanded ? '▲' : '▼'}</span>
                             <button
-                              onClick={(e) => { e.stopPropagation(); toast.success('Application submitted for ' + job.title) }}
+                              onClick={(e) => { e.stopPropagation(); toast.success('Application submitted for ' + job.title); gam.addXp(100, 'Job Applied'); gam.unlockAchievement('job_apply') }}
                               className="px-4 py-2 text-sm rounded-xl bg-white/10 hover:bg-white/20 text-white transition"
                             >
                               Apply
@@ -2883,6 +3011,26 @@ export default function App() {
           ptoHours={lootPtoHours}
           durationMin={lootDurationMin}
           theme={theme}
+        />
+
+        {/* Achievements Panel */}
+        <AchievementsPanel
+          isOpen={showAchievements}
+          onClose={() => setShowAchievements(false)}
+          level={gam.level}
+          levelTitle={gam.levelTitle}
+          xp={gam.xp}
+          xpThisLevel={gam.xpThisLevel}
+          xpToNextLevel={gam.xpToNextLevel}
+          achievements={gam.achievements}
+          dailyChallenges={gam.dailyChallenges}
+        />
+
+        {/* Level-Up celebration modal */}
+        <LevelUpModal
+          levelUp={gam.pendingLevelUp}
+          onDismiss={gam.dismissLevelUp}
+          accentColor={getThemeAccentHex(theme)}
         />
 
         {/* Shockwave ripple on clock in */}

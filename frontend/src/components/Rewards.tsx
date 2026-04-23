@@ -1,5 +1,17 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
+import type { Achievement } from '../hooks/useGamification'
+
+interface GamificationSummary {
+  level: number
+  levelTitle: string
+  xp: number
+  xpThisLevel: number
+  xpToNextLevel: number
+  achievements: Achievement[]
+  onOpenAchievements: () => void
+}
 
 interface RewardsProps {
   totalHours: number
@@ -8,6 +20,7 @@ interface RewardsProps {
   theme?: 'green' | 'white' | 'orange' | 'cyan' | 'pink' | 'purple'
   user?: any
   onFocus?: () => void
+  gamification?: GamificationSummary
 }
 
 // Compute hourly rate from user: if salary set (salaried), hourly = salary/2080, else use pay (default $65)
@@ -20,7 +33,7 @@ function computeHourlyRate(user: any): number {
   return pay > 0 ? pay : 65
 }
 
-export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'green', user, onFocus }: RewardsProps) {
+export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'green', user, onFocus, gamification }: RewardsProps) {
   const [hourlyRate, setHourlyRate] = useState(() => computeHourlyRate(user))
   const [ptoAccrualRate, setPtoAccrualRate] = useState(1 / 30) // 1 hour per 30 hours worked
   const [hasFiredConfetti, setHasFiredConfetti] = useState(false)
@@ -200,6 +213,60 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
             <div className="text-sm text-zinc-400 mb-3">{daysUntilNextPaycheck()} days until next paycheck</div>
           </div>
         </div>
+
+        {/* Gamification panel */}
+        {gamification && (
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Level + XP */}
+            <div className="glass rounded-2xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0" style={{ backgroundColor: 'var(--accent-color)', color: '#000' }}>
+                  {gamification.level}
+                </div>
+                <div>
+                  <div className="font-semibold" style={{ color: 'var(--accent-color)' }}>{gamification.levelTitle}</div>
+                  <div className="text-xs text-zinc-400">{gamification.xp.toLocaleString()} total XP</div>
+                </div>
+              </div>
+              <div className="text-xs text-zinc-500 flex justify-between mb-1">
+                <span>Level {gamification.level}</span>
+                <span>{gamification.xpThisLevel} / {gamification.xpToNextLevel} XP</span>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: 'var(--accent-color)' }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, (gamification.xpThisLevel / gamification.xpToNextLevel) * 100)}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+              </div>
+              <button onClick={gamification.onOpenAchievements} className="mt-3 text-xs underline text-zinc-400 hover:text-zinc-200">
+                View all achievements →
+              </button>
+            </div>
+
+            {/* Recent achievements */}
+            <div className="glass rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-semibold" style={{ color: 'var(--accent-color)' }}>🏆 Recent Badges</div>
+                <button onClick={gamification.onOpenAchievements} className="text-xs text-zinc-500 hover:text-zinc-300 underline">All →</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {gamification.achievements.filter(a => a.unlockedAt).slice(0, 6).map(a => (
+                  <div key={a.id} title={`${a.name}: ${a.description}`}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl cursor-default transition-transform hover:scale-110"
+                    style={{ background: 'color-mix(in srgb, var(--accent-color) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-color) 25%, transparent)' }}>
+                    {a.icon}
+                  </div>
+                ))}
+                {gamification.achievements.filter(a => a.unlockedAt).length === 0 && (
+                  <div className="text-xs text-zinc-500 py-2">Clock in to earn your first badge!</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="text-center text-xs text-zinc-500 pt-6">
           SwiftShift - Instant gratification for your hard work.
