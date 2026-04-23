@@ -317,13 +317,36 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
       </div>
 
       {/* ═══════════════════════════════════════════
+          PTO VAULT
+          ═══════════════════════════════════════════ */}
+      <div className="glass rounded-3xl p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-lg font-semibold neon-green uppercase tracking-[2px] mb-1">PTO Vault</div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold neon-green tabular-nums">{accruedPTO.toFixed(3)}</span>
+              <span className="text-lg text-zinc-400">hrs</span>
+            </div>
+            <div className="text-xs text-zinc-500 mt-1">
+              Accruing 1 hr per {(1 / ptoAccrualRate).toFixed(0)} hrs worked
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-zinc-500 mb-1">Projected annual PTO</div>
+            <div className="text-2xl font-semibold neon-green">{(2080 * ptoAccrualRate).toFixed(1)} hrs</div>
+            <div className="text-xs text-zinc-600 mt-0.5">{(2080 * ptoAccrualRate / 8).toFixed(1)} days / year</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════
           DAILY MISSION
           ═══════════════════════════════════════════ */}
       <div className="glass rounded-3xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-xs uppercase tracking-[2px] text-zinc-400">Daily Mission</div>
-            <div className="text-lg font-semibold neon-green mt-0.5">
+            <div className="text-lg font-semibold neon-green uppercase tracking-[2px]">Daily Mission</div>
+            <div className="text-xs text-zinc-400 mt-0.5">
               Earn ${dailyGoalDollars.toFixed(0)} today
             </div>
           </div>
@@ -373,7 +396,7 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
 
         {/* Work Streak */}
         <div className="glass rounded-3xl p-6 text-center flex flex-col items-center justify-center">
-          <div className="text-xs uppercase tracking-[2px] text-zinc-400 mb-2">Work Streak</div>
+          <div className="text-lg font-semibold neon-green uppercase tracking-[2px] mb-2">Work Streak</div>
           <div className="text-4xl mb-1 select-none">🔥</div>
           <div className="text-4xl font-bold neon-green tabular-nums">{streak}</div>
           <div className="text-xs text-zinc-500 mt-1.5">
@@ -431,7 +454,7 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
           ═══════════════════════════════════════════ */}
       <div className="glass rounded-3xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-xs uppercase tracking-[2px] text-zinc-400">Achievements</div>
+          <div className="text-lg font-semibold neon-green uppercase tracking-[2px]">Achievements</div>
           <div className="text-xs text-zinc-500">
             {achievements.filter(a => a.unlocked).length} / {achievements.length} unlocked
           </div>
@@ -467,29 +490,6 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
               )}
             </motion.div>
           ))}
-        </div>
-      </div>
-
-      {/* ═══════════════════════════════════════════
-          PTO VAULT
-          ═══════════════════════════════════════════ */}
-      <div className="glass rounded-3xl p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-[2px] text-zinc-400 mb-1">PTO Vault</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold neon-green tabular-nums">{accruedPTO.toFixed(3)}</span>
-              <span className="text-lg text-zinc-400">hrs</span>
-            </div>
-            <div className="text-xs text-zinc-500 mt-1">
-              Accruing 1 hr per {(1 / ptoAccrualRate).toFixed(0)} hrs worked
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-zinc-500 mb-1">Projected annual PTO</div>
-            <div className="text-2xl font-semibold neon-green">{(2080 * ptoAccrualRate).toFixed(1)} hrs</div>
-            <div className="text-xs text-zinc-600 mt-0.5">{(2080 * ptoAccrualRate / 8).toFixed(1)} days / year</div>
-          </div>
         </div>
       </div>
 
