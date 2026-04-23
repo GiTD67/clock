@@ -1210,6 +1210,12 @@ export default function App() {
       setTimeout(() => {
         toast.success(`Good ${g}, ${user.first_name}! 👋`, {
           description: streak > 0 ? `${streak}-day streak — keep it going!` : 'Ready to clock in?',
+          duration: 8000,
+          style: {
+            background: '#111111',
+            border: `1px solid ${getThemeAccentHex(theme)}`,
+            color: '#ffffff',
+          },
         })
       }, 1000)
     }
