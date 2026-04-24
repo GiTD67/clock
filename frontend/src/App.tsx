@@ -1922,9 +1922,10 @@ export default function App() {
     }
   }, [activeView, user?.id])
 
-  // Persist theme
+  // Persist theme and sync to body for toast styling
   useEffect(() => {
     localStorage.setItem('theme', theme)
+    document.body.setAttribute('data-theme', theme)
   }, [theme])
 
   // Update favicon dynamically when theme changes
@@ -2655,7 +2656,7 @@ export default function App() {
               </svg>
               {navUnlockedAchievements.slice(0, 3).map(id => {
                 const ach = ACHIEVEMENTS.find(a => a.id === id)
-                return ach ? <span key={id} className="text-xs leading-none">{ach.icon}</span> : null
+                return ach ? <span key={id} className="text-xs leading-none" style={{ color: 'var(--accent-color)' }}>{ach.icon}</span> : null
               })}
               <span className="ta-streak-label text-white/40">Achievements</span>
             </button>
@@ -3101,6 +3102,7 @@ export default function App() {
                       </div>
                       {/* Work state selector + break law info below the bar */}
                       <div className="mt-1.5 flex items-center gap-2">
+                        <span className="text-xs text-zinc-400">State:</span>
                         <select
                           value={workState}
                           onChange={e => setWorkState(e.target.value)}

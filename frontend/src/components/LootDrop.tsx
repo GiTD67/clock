@@ -167,7 +167,8 @@ export function LootDrop({ isOpen, onClose, earnings, ptoHours, durationMin, the
               ×
             </button>
             {/* Funny message */}
-            <div className="text-xl font-semibold tracking-tight text-left leading-tight mb-4 pr-10" style={{ color: accentColor }}>
+            <div className="h-3" />
+            <div className="text-xl font-semibold tracking-tight text-center leading-tight mb-4" style={{ color: accentColor }}>
               {dailyMessage}
             </div>
 
