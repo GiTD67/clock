@@ -3024,6 +3024,10 @@ export default function App() {
                         // Progress ring: empty at 0, full at 100%
                         const offset = circumference * (1 - Math.min(progress, 1))
 
+                        // Spark arc: short dash (~6% of circumference) that orbits the ring in overdrive
+                        const sparkDash = circumference * 0.06
+                        const sparkGap = circumference - sparkDash
+
                         return (
                           <div className="relative w-[260px] h-[260px] flex items-center justify-center">
                             <svg width="260" height="260" className="absolute" style={isOverdrive ? { filter: 'drop-shadow(0 0 12px #FFAA00) drop-shadow(0 0 24px #FFD700)' } : undefined}>
@@ -3041,6 +3045,52 @@ export default function App() {
                                 transition={{ type: 'spring', stiffness: isOverdrive ? 100 : 70, damping: isOverdrive ? 15 : 20 }}
                                 style={{ strokeDasharray: circumference }}
                               />
+                              {/* Overdrive: orbiting speed spark (represents 1.5× earnings) */}
+                              {isOverdrive && (
+                                <circle
+                                  cx="130" cy="130" r={radius}
+                                  fill="none"
+                                  stroke="#FFFFFF"
+                                  strokeWidth="20"
+                                  strokeLinecap="round"
+                                  strokeDasharray={`${sparkDash} ${sparkGap}`}
+                                  style={{
+                                    transformOrigin: '130px 130px',
+                                    animation: 'overdrive-orbit 1.5s linear infinite',
+                                    opacity: 0.9,
+                                    filter: 'blur(3px)',
+                                  }}
+                                />
+                              )}
+                              {/* Overdrive: electric bolt flashes around the ring */}
+                              {isOverdrive && (
+                                <>
+                                  {/* top */}
+                                  <polyline points="130,24 133,14 128,5" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 0.0s infinite' }} />
+                                  {/* upper-right */}
+                                  <polyline points="205,55 213,46 220,52" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 0.3s infinite' }} />
+                                  {/* right */}
+                                  <polyline points="236,130 247,124 255,131" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 0.6s infinite' }} />
+                                  {/* lower-right */}
+                                  <polyline points="205,205 213,214 220,208" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 0.9s infinite' }} />
+                                  {/* bottom */}
+                                  <polyline points="130,236 133,246 128,255" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 1.2s infinite' }} />
+                                  {/* lower-left */}
+                                  <polyline points="55,205 47,214 40,208" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 1.5s infinite' }} />
+                                  {/* left */}
+                                  <polyline points="24,130 13,124 5,131" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 1.8s infinite' }} />
+                                  {/* upper-left */}
+                                  <polyline points="55,55 47,46 40,52" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                    style={{ animation: 'overdrive-bolt 2.4s 2.1s infinite' }} />
+                                </>
+                              )}
                             </svg>
                             {/* Center content */}
                             <div className="text-center z-10">
