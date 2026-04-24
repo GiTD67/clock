@@ -897,10 +897,62 @@ function TimesheetView({ user }: { user: any }) {
 
 // ===== Logo SVG =====
 function LogoSVG({ className }: { className?: string }) {
+  const id = useRef(`svgl-${Math.random().toString(36).slice(2, 7)}`).current
+  const clip = `url(#cc-${id})`
+  const glow = `url(#gw-${id})`
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" className={className}>
-      <circle cx="100" cy="100" r="86" stroke="white" strokeWidth="2"/>
-      <path d="M 116 28 L 70 108 L 102 108 L 80 172 L 146 90 L 112 90 Z" fill="white"/>
+      <defs>
+        <filter id={`gw-${id}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <clipPath id={`cc-${id}`}><circle cx="100" cy="100" r="87"/></clipPath>
+      </defs>
+      <circle cx="100" cy="100" r="99" fill="#050810"/>
+      <g clipPath={clip}>
+        <path d="M 100 35 A 65 65 0 0 1 100 165" stroke="white" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.3" fill="none"/>
+        <path d="M 100 50 A 50 50 0 0 1 100 150" stroke="white" strokeWidth="0.8" opacity="0.2" fill="none"/>
+        <line x1="100" y1="16" x2="100" y2="24" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+        <line x1="121.5" y1="19.8" x2="119.4" y2="27.6" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="141.5" y1="28.1" x2="137.5" y2="35" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="158.7" y1="41.3" x2="153" y2="47" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.8"/>
+        <line x1="171.9" y1="58.5" x2="165" y2="62.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="180.2" y1="78.5" x2="172.5" y2="80.6" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="183" y1="100" x2="175" y2="100" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+        <line x1="180.2" y1="121.5" x2="172.5" y2="119.4" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="171.9" y1="141.5" x2="165" y2="137.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="158.7" y1="158.7" x2="153" y2="153" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.8"/>
+        <line x1="141.5" y1="171.9" x2="137.5" y2="165" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="121.5" y1="180.2" x2="119.4" y2="172.5" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <line x1="100" y1="184" x2="100" y2="176" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+        <g stroke="white" strokeWidth="0.8" opacity="0.45" fill="none">
+          <line x1="42" y1="62" x2="65" y2="47"/><line x1="42" y1="62" x2="56" y2="88"/>
+          <line x1="65" y1="47" x2="80" y2="68"/><line x1="56" y1="88" x2="80" y2="68"/>
+          <line x1="56" y1="88" x2="36" y2="110"/><line x1="36" y1="110" x2="62" y2="122"/>
+          <line x1="62" y1="122" x2="78" y2="68"/><line x1="62" y1="122" x2="48" y2="148"/>
+          <line x1="42" y1="62" x2="26" y2="85"/><line x1="26" y1="85" x2="36" y2="110"/>
+          <line x1="65" y1="47" x2="78" y2="25"/><line x1="78" y1="25" x2="80" y2="68"/>
+        </g>
+        <g filter={glow} fill="white">
+          <circle cx="42" cy="62" r="3.5" opacity="0.95"/><circle cx="65" cy="47" r="3" opacity="0.9"/>
+          <circle cx="80" cy="68" r="3.5" opacity="0.95"/><circle cx="56" cy="88" r="2.5" opacity="0.85"/>
+          <circle cx="26" cy="85" r="2" opacity="0.7"/><circle cx="36" cy="110" r="3.5" opacity="0.95"/>
+          <circle cx="62" cy="122" r="3" opacity="0.9"/><circle cx="48" cy="148" r="2.5" opacity="0.75"/>
+          <circle cx="78" cy="25" r="2" opacity="0.65"/>
+        </g>
+        <path d="M 100 100 L 87 83 L 93 78 L 74 52" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter={glow}/>
+        <path d="M 100 100 L 113 83 L 107 78 L 126 52" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter={glow}/>
+        <circle cx="100" cy="100" r="5" fill="white" filter={glow}/>
+        <circle cx="100" cy="100" r="10" fill="white" opacity="0.1"/>
+        <path d="M 138 170 C 160 168, 178 150, 181 120" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" fill="none"/>
+      </g>
+      <circle cx="100" cy="100" r="87" stroke="white" strokeWidth="2" filter={glow} opacity="0.9"/>
+      <path d="M 20 85 C 15 10, 185 10, 180 85" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none" filter={glow} opacity="0.9"/>
+      <path d="M 180 85 L 185.5 77 L 175.5 77 Z" fill="white" opacity="0.9"/>
+      <line x1="12" y1="148" x2="55" y2="128" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" filter={glow}/>
+      <line x1="7" y1="162" x2="50" y2="146" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.55"/>
+      <line x1="14" y1="174" x2="47" y2="162" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.35"/>
     </svg>
   )
 }
@@ -1812,7 +1864,7 @@ export default function App() {
 
   // Update favicon dynamically when theme changes
   useEffect(() => {
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="14" fill="#0a0a0a"/><circle cx="32" cy="32" r="27" stroke="white" stroke-width="1.5"/><path d="M 37 9 L 22 35 L 33 35 L 26 55 L 47 29 L 35 29 Z" fill="white"/></svg>`
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="14" fill="#050810"/><circle cx="32" cy="32" r="27" stroke="white" stroke-width="1.5" opacity="0.9"/><path d="M 32 11 A 21 21 0 0 1 32 53" stroke="white" stroke-width="0.6" stroke-dasharray="2 2" opacity="0.3" fill="none"/><line x1="32" y1="5" x2="32" y2="9" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/><line x1="51.1" y1="12.9" x2="48.3" y2="15.7" stroke="white" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/><line x1="59" y1="32" x2="55" y2="32" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/><line x1="51.1" y1="51.1" x2="48.3" y2="48.3" stroke="white" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/><line x1="32" y1="59" x2="32" y2="55" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/><line x1="12" y1="20" x2="20" y2="14" stroke="white" stroke-width="0.6" opacity="0.5"/><line x1="12" y1="20" x2="17" y2="28" stroke="white" stroke-width="0.6" opacity="0.5"/><line x1="17" y1="28" x2="11" y2="36" stroke="white" stroke-width="0.6" opacity="0.5"/><line x1="11" y1="36" x2="18" y2="44" stroke="white" stroke-width="0.6" opacity="0.4"/><circle cx="12" cy="20" r="1.5" fill="white" opacity="0.9"/><circle cx="20" cy="14" r="1.2" fill="white" opacity="0.85"/><circle cx="17" cy="28" r="1.5" fill="white" opacity="0.9"/><circle cx="11" cy="36" r="1.5" fill="white" opacity="0.9"/><circle cx="18" cy="44" r="1.2" fill="white" opacity="0.8"/><path d="M 32 32 L 26 24 L 29 22 L 22 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M 32 32 L 38 24 L 35 22 L 42 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="32" r="3" fill="white"/><path d="M 8 26 C 7 3, 57 3, 56 26" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.9"/><path d="M 56 26 L 59.5 20 L 53 20.5 Z" fill="white" opacity="0.9"/><line x1="3" y1="46" x2="17" y2="40" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.75"/><line x1="1" y1="53" x2="15" y2="48" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/></svg>`
     const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`
     let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']")
     if (!link) {
