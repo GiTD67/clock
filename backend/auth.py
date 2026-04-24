@@ -150,7 +150,7 @@ def _ensure_password_reset_tokens_table():
         db.execute(
             """
             CREATE TABLE IF NOT EXISTS password_reset_tokens (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              id SERIAL PRIMARY KEY,
               user_id INTEGER NOT NULL,
               token TEXT UNIQUE NOT NULL,
               expires_at INTEGER NOT NULL,
