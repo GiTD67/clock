@@ -22,7 +22,11 @@ tables = [
       manager_name TEXT,
       is_fulltime INTEGER DEFAULT 1,
       pay REAL,
-      salary REAL
+      salary REAL,
+      hourly_rate REAL,
+      pto_accrual_rate REAL,
+      streak_count INTEGER DEFAULT 0,
+      streak_last_date TEXT
     )
     """,
     """
@@ -39,6 +43,7 @@ tables = [
       clock_in TEXT,
       clock_out TEXT,
       duration_minutes INTEGER,
+      break_minutes INTEGER DEFAULT 0,
       notes TEXT
     )
     """,
@@ -64,6 +69,31 @@ tables = [
       date_expiry TEXT,
       salary TEXT,
       location TEXT
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS timesheets (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER NOT NULL,
+      pay_period_start TEXT NOT NULL,
+      pay_period_end TEXT NOT NULL,
+      total_hours REAL DEFAULT 0,
+      regular_hours REAL DEFAULT 0,
+      overtime_hours REAL DEFAULT 0,
+      break_minutes INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'pending',
+      submitted_at TEXT,
+      approved_at TEXT,
+      approved_by INTEGER,
+      notes TEXT
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS pto_balances (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER NOT NULL UNIQUE,
+      balance_hours REAL DEFAULT 0,
+      last_updated TEXT
     )
     """,
 ]

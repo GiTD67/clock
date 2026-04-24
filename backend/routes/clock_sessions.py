@@ -43,13 +43,16 @@ def clock_in():
     return jsonify(dict(row)), 201
 
 
-def _compute_session_duration(clock_in_str: str) -> int:
+def _compute_session_duration(clock_in_str: str, break_minutes: int = 0) -> int:
     clock_in = datetime.fromisoformat(clock_in_str)
-    return int((datetime.utcnow() - clock_in).total_seconds() / 60)
+    total = int((datetime.utcnow() - clock_in).total_seconds() / 60)
+    return max(0, total - break_minutes)
 
 
 @bp.route("/api/clock-sessions/<int:session_id>", methods=["PUT"])
 def clock_out(session_id):
+    data = request.get_json() or {}
+    break_minutes = int(data.get("break_minutes", 0))
     now = datetime.utcnow().isoformat()
     with get_db() as db:
         row = db.execute("SELECT * FROM clock_sessions WHERE id = ?", (session_id,)).fetchone()
@@ -57,10 +60,10 @@ def clock_out(session_id):
             return jsonify({"error": "not found"}), 404
         if row["clock_out"]:
             return jsonify({"error": "already clocked out"}), 400
-        duration = _compute_session_duration(row["clock_in"])
+        duration = _compute_session_duration(row["clock_in"], break_minutes)
         db.execute(
-            "UPDATE clock_sessions SET clock_out = ?, duration_minutes = ? WHERE id = ?",
-            (now, duration, session_id),
+            "UPDATE clock_sessions SET clock_out = ?, duration_minutes = ?, break_minutes = ? WHERE id = ?",
+            (now, duration, break_minutes, session_id),
         )
         db.commit()
         row = db.execute("SELECT * FROM clock_sessions WHERE id = ?", (session_id,)).fetchone()

@@ -6,12 +6,13 @@ from db import get_db
 bp = Blueprint("users", __name__)
 
 
+_USER_FIELDS = "id, first_name, last_name, email, job_role, manager_name, is_fulltime, pay, salary, hourly_rate, pto_accrual_rate, streak_count, streak_last_date"
+
+
 @bp.route("/api/users", methods=["GET"])
 def list_users():
     with get_db() as db:
-        rows = db.execute(
-            "SELECT id, first_name, last_name, email, job_role, manager_name, is_fulltime, pay, salary FROM users ORDER BY id"
-        ).fetchall()
+        rows = db.execute(f"SELECT {_USER_FIELDS} FROM users ORDER BY id").fetchall()
     return jsonify([dict(r) for r in rows])
 
 
@@ -45,7 +46,7 @@ def create_user():
 def get_user(uid):
     with get_db() as db:
         row = db.execute(
-            "SELECT id, first_name, last_name, email, job_role, manager_name, is_fulltime, pay, salary FROM users WHERE id = ?",
+            f"SELECT {_USER_FIELDS} FROM users WHERE id = ?",
             (uid,),
         ).fetchone()
     if not row:
@@ -56,7 +57,8 @@ def get_user(uid):
 @bp.route("/api/users/<int:uid>", methods=["PUT"])
 def update_user(uid):
     data = request.get_json() or {}
-    allowed = {"job_role", "manager_name", "is_fulltime", "pay", "salary"}
+    allowed = {"job_role", "manager_name", "is_fulltime", "pay", "salary",
+               "hourly_rate", "pto_accrual_rate", "streak_count", "streak_last_date"}
     fields = {k: v for k, v in data.items() if k in allowed}
     if not fields:
         return jsonify({"error": "no updatable fields provided"}), 400
@@ -65,10 +67,7 @@ def update_user(uid):
     with get_db() as db:
         db.execute(f"UPDATE users SET {set_clause} WHERE id = ?", values)
         db.commit()
-        row = db.execute(
-            "SELECT id, first_name, last_name, email, job_role, manager_name, is_fulltime, pay, salary FROM users WHERE id = ?",
-            (uid,),
-        ).fetchone()
+        row = db.execute(f"SELECT {_USER_FIELDS} FROM users WHERE id = ?", (uid,)).fetchone()
     if not row:
         return jsonify({"error": "not found"}), 404
     return jsonify(dict(row))

@@ -42,7 +42,7 @@ def _ensure_users_table():
             """
         )
         # Add columns if upgrading from older schema
-        for col in ("job_role", "manager_name"):
+        for col in ("job_role", "manager_name", "streak_last_date"):
             try:
                 db.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
                 db.commit()
@@ -57,6 +57,17 @@ def _ensure_users_table():
                 db.commit()
             except Exception:
                 pass  # column already exists or other error, ignore
+        for col in ("hourly_rate", "pto_accrual_rate"):
+            try:
+                db.execute(f"ALTER TABLE users ADD COLUMN {col} REAL")
+                db.commit()
+            except Exception:
+                pass  # column already exists or other error, ignore
+        try:
+            db.execute("ALTER TABLE users ADD COLUMN streak_count INTEGER DEFAULT 0")
+            db.commit()
+        except Exception:
+            pass  # column already exists or other error, ignore
 
 
 _ensure_users_table()
@@ -130,13 +141,62 @@ def _ensure_clock_sessions_table():
               clock_in TEXT,
               clock_out TEXT,
               duration_minutes INTEGER,
+              break_minutes INTEGER DEFAULT 0,
+              notes TEXT
+            )
+            """
+        )
+        try:
+            db.execute("ALTER TABLE clock_sessions ADD COLUMN break_minutes INTEGER DEFAULT 0")
+            db.commit()
+        except Exception:
+            pass  # column already exists
+
+
+_ensure_clock_sessions_table()
+
+
+def _ensure_timesheets_table():
+    with get_db() as db:
+        db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS timesheets (
+              id SERIAL PRIMARY KEY,
+              employee_id INTEGER NOT NULL,
+              pay_period_start TEXT NOT NULL,
+              pay_period_end TEXT NOT NULL,
+              total_hours REAL DEFAULT 0,
+              regular_hours REAL DEFAULT 0,
+              overtime_hours REAL DEFAULT 0,
+              break_minutes INTEGER DEFAULT 0,
+              status TEXT DEFAULT 'pending',
+              submitted_at TEXT,
+              approved_at TEXT,
+              approved_by INTEGER,
               notes TEXT
             )
             """
         )
 
 
-_ensure_clock_sessions_table()
+_ensure_timesheets_table()
+
+
+def _ensure_pto_balances_table():
+    with get_db() as db:
+        db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pto_balances (
+              id SERIAL PRIMARY KEY,
+              employee_id INTEGER NOT NULL UNIQUE,
+              balance_hours REAL DEFAULT 0,
+              last_updated TEXT
+            )
+            """
+        )
+
+
+_ensure_pto_balances_table()
 
 
 @bp.route("/signup", methods=["POST"])
@@ -152,7 +212,7 @@ def signup():
     with get_db() as db:
         try:
             user = db.execute(
-                "INSERT INTO users (first_name, last_name, email, password_hash, is_fulltime) VALUES (?, ?, ?, ?, 1) RETURNING id, first_name, last_name, email, job_role, manager_name, is_fulltime, pay, salary",
+                "INSERT INTO users (first_name, last_name, email, password_hash, is_fulltime) VALUES (?, ?, ?, ?, 1) RETURNING id, first_name, last_name, email, job_role, manager_name, is_fulltime, pay, salary, hourly_rate, pto_accrual_rate, streak_count, streak_last_date",
                 (first_name, last_name, email, pw_hash),
             ).fetchone()
         except Exception as e:
@@ -183,4 +243,8 @@ def signin():
         "is_fulltime": row.get("is_fulltime", 1),
         "pay": row.get("pay"),
         "salary": row.get("salary"),
+        "hourly_rate": row.get("hourly_rate"),
+        "pto_accrual_rate": row.get("pto_accrual_rate"),
+        "streak_count": row.get("streak_count", 0),
+        "streak_last_date": row.get("streak_last_date"),
     })
