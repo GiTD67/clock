@@ -5,6 +5,7 @@ from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 
 from db import get_db  # noqa: F401  # ensure db module is loaded
+from limiter import limiter
 from routes import health_bp, employees_bp, time_entries_bp, clock_sessions_bp, users_bp, grok_bp, jobs_bp, timesheet_submissions_bp, pto_bp, availability_bp, shift_swaps_bp
 from auth import bp as auth_bp
 
@@ -14,6 +15,7 @@ app = Flask(__name__, static_folder=None)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB uploads
 _allowed_origins = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
 CORS(app, origins=_allowed_origins)
+limiter.init_app(app)
 
 
 @app.route("/api/kalshi/markets")
@@ -85,4 +87,5 @@ def not_found(e):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)

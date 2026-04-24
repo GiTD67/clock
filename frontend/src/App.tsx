@@ -859,6 +859,229 @@ function getThemeAccentHex(theme: string): string {
   return '#D7FE51'
 }
 
+// ===== Forgot Password Modal =====
+function ForgotPasswordModal({ onClose, accentHex }: { onClose: () => void; accentHex: string }) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [resetUrl, setResetUrl] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Request failed. Please try again.')
+      } else {
+        setSent(true)
+        if (data.reset_url) setResetUrl(data.reset_url)
+      }
+    } catch {
+      setError('Connection failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="glass w-full max-w-[360px] rounded-3xl p-8 border border-white/10 mx-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-semibold">Reset Password</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors" aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        {sent ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="text-4xl">📬</div>
+            <p className="text-sm text-zinc-400">
+              If that email is registered, a reset link has been generated.
+            </p>
+            {resetUrl && (
+              <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10 text-left">
+                <p className="text-[11px] text-zinc-500 mb-1.5 uppercase tracking-wider">Your reset link (demo mode)</p>
+                <a
+                  href={resetUrl}
+                  className="text-xs break-all underline underline-offset-4 transition-colors"
+                  style={{ color: accentHex }}
+                >
+                  {window.location.origin}/{resetUrl}
+                </a>
+              </div>
+            )}
+            <button onClick={onClose} className="mt-2 text-sm underline underline-offset-4 text-zinc-400 hover:text-white transition-colors">
+              Back to sign in
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-zinc-400">Enter your email and we'll generate a password reset link.</p>
+            <div>
+              <label className="block text-sm text-zinc-400 mb-1 tracking-wide">EMAIL</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="glass-input w-full rounded-2xl px-4 py-3 text-sm placeholder:text-zinc-600 border border-white/10 focus:border-white/40 outline-none transition-all"
+                placeholder="you@company.com"
+                required
+                autoFocus
+              />
+            </div>
+            {error && (
+              <div className="text-sm text-red-400 flex items-center gap-2 bg-red-950/40 border border-red-900/60 rounded-xl px-4 py-2">
+                ⚠ {error}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="glass-btn-green w-full py-3 rounded-2xl text-sm font-semibold tracking-[0.5px] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Generating link…' : 'Send Reset Link'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ===== Reset Password Page =====
+function ResetPasswordPage() {
+  const token = new URLSearchParams(window.location.search).get('token') || ''
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const accentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password !== confirm) { setError("Passwords don't match"); return }
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Reset failed. The link may have expired.')
+      } else {
+        setSuccess(true)
+      }
+    } catch {
+      setError('Connection failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0A0F1E] to-black" />
+      <div className="glass w-full max-w-[380px] rounded-3xl p-8 border border-white/10 relative z-10">
+        <div className="flex items-center gap-3 mb-6">
+          <LogoSVG className="h-8 w-auto" />
+          <span className="font-semibold text-xl tracking-[1px]">SWIFTSHIFT</span>
+        </div>
+        {!token ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="text-4xl">⚠️</div>
+            <p className="text-sm text-zinc-400">Invalid reset link. Please request a new one.</p>
+            <a href="login" className="inline-block text-sm underline underline-offset-4 text-zinc-400 hover:text-white transition-colors">Back to sign in</a>
+          </div>
+        ) : success ? (
+          <div className="text-center py-4 space-y-3">
+            <div className="text-4xl">✅</div>
+            <p className="text-sm text-zinc-400">Password updated successfully!</p>
+            <a href="login" className="inline-block text-sm underline underline-offset-4 text-zinc-400 hover:text-white transition-colors">Sign in</a>
+          </div>
+        ) : (
+          <>
+            <div className="mb-5">
+              <div className="text-xs tracking-[2px] mb-1.5 uppercase" style={{ color: accentHex }}>Set New Password</div>
+              <h2 className="text-2xl font-semibold tracking-tight">Choose a new password</h2>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1 tracking-wide">NEW PASSWORD</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="glass-input w-full rounded-2xl px-4 py-3 text-sm placeholder:text-zinc-600 border border-white/10 focus:border-white/40 outline-none transition-all pr-12"
+                    placeholder="Min 8 characters"
+                    required
+                    minLength={8}
+                    autoFocus
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors" tabIndex={-1}>
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1 tracking-wide">CONFIRM PASSWORD</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm placeholder:text-zinc-600 border border-white/10 focus:border-white/40 outline-none transition-all"
+                  placeholder="Repeat password"
+                  required
+                />
+              </div>
+              {error && (
+                <div className="text-sm text-red-400 flex items-center gap-2 bg-red-950/40 border border-red-900/60 rounded-xl px-4 py-2">
+                  ⚠ {error}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="glass-btn-green w-full py-3.5 rounded-2xl text-base font-semibold tracking-[0.5px] transition-all active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Updating…' : 'Update Password'}
+              </button>
+              <div className="text-center">
+                <a href="login" className="text-sm text-zinc-400 hover:text-white underline underline-offset-4 transition-colors">Back to sign in</a>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ===== Auth pages =====
 function LoginPage() {
   const [email, setEmail] = useState(() => localStorage.getItem('lastEmail') || '')
@@ -869,6 +1092,7 @@ function LoginPage() {
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [shockwaveActive] = useState(false)
   const [showFeaturePreview, setShowFeaturePreview] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   const isReturningUser = !!localStorage.getItem('lastEmail')
   const loginAccentHex = getThemeAccentHex(localStorage.getItem('theme') || 'green')
@@ -1034,7 +1258,7 @@ function LoginPage() {
 
             {/* Links */}
             <div className="flex justify-between text-sm pt-1">
-              <a href="#" className="text-zinc-500 hover:text-white transition-colors">Forgot password?</a>
+              <button type="button" onClick={() => setShowForgotPassword(true)} className="text-zinc-500 hover:text-white transition-colors">Forgot password?</button>
               <a href="signup" className="text-zinc-400 hover:text-white underline underline-offset-4">Create account</a>
             </div>
 
@@ -1065,6 +1289,12 @@ function LoginPage() {
       {showFeaturePreview && (
         <FeaturePreview
           onClose={() => setShowFeaturePreview(false)}
+          accentHex={loginAccentHex}
+        />
+      )}
+      {showForgotPassword && (
+        <ForgotPasswordModal
+          onClose={() => setShowForgotPassword(false)}
           accentHex={loginAccentHex}
         />
       )}
@@ -1310,7 +1540,9 @@ export default function App() {
   const isLogin = pathname === '/login' || pathname.endsWith('/login')
   const isSignup = pathname === '/signup' || pathname.endsWith('/signup')
   const isAdmin = pathname === '/admin' || pathname.endsWith('/admin')
+  const isResetPassword = pathname === '/reset-password' || pathname.endsWith('/reset-password')
 
+  if (isResetPassword) return <ResetPasswordPage />
   if (isSignup) return <SignupPage />
 
   // Gate: nothing visible without login
