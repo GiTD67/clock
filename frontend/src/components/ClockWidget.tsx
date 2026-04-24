@@ -32,7 +32,9 @@ export function ClockWidget({ onClockChange, onClockOut }: ClockWidgetProps) {
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.985 }}
         >
-          <div className="text-6xl">⏱</div>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}>
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
           <div>CLOCK IN</div>
           <div className="text-sm font-normal opacity-60">Tap once. That's it.</div>
         </motion.button>

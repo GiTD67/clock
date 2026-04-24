@@ -292,16 +292,16 @@ const XP_LEVELS = [
 ]
 
 const ACHIEVEMENTS = [
-  { id: 'first_timer', icon: '🎯', name: 'First Timer', desc: 'Submit your first timesheet', check: (s: GamificationState) => s.submits >= 1 },
-  { id: 'overtime_warrior', icon: '⚡', name: 'Overtime Warrior', desc: 'Log more than 80h in a period', check: (s: GamificationState) => s.maxPeriodHours >= 80 },
-  { id: 'speed_logger', icon: '💬', name: 'Speed Logger', desc: 'Use NLP 10 times', check: (s: GamificationState) => s.nlpUses >= 10 },
-  { id: 'perfect_period', icon: '💎', name: 'Perfect Period', desc: 'Log hours every day in a period', check: (s: GamificationState) => s.perfectPeriods >= 1 },
-  { id: 'hat_trick', icon: '🔥', name: 'Hat Trick', desc: 'Submit 3 periods in a row', check: (s: GamificationState) => s.streak >= 3 },
-  { id: 'marathon', icon: '🏃', name: 'Marathon', desc: 'Earn 500 XP total', check: (s: GamificationState) => s.totalXP >= 500 },
-  { id: 'consistency', icon: '⭐', name: 'Consistency', desc: 'Submit 5 timesheets', check: (s: GamificationState) => s.submits >= 5 },
-  { id: 'century', icon: '💯', name: 'Century Club', desc: 'Earn 1000 XP total', check: (s: GamificationState) => s.totalXP >= 1000 },
-  { id: 'level5', icon: '🏅', name: 'Level 5', desc: 'Reach level 5', check: (s: GamificationState) => s.totalXP >= 700 },
-  { id: 'legend', icon: '👑', name: 'Legend', desc: 'Reach max level', check: (s: GamificationState) => s.totalXP >= 3200 },
+  { id: 'first_timer', icon: '◎', name: 'First Timer', desc: 'Submit your first timesheet', check: (s: GamificationState) => s.submits >= 1 },
+  { id: 'overtime_warrior', icon: '↑', name: 'Overtime Warrior', desc: 'Log more than 80h in a period', check: (s: GamificationState) => s.maxPeriodHours >= 80 },
+  { id: 'speed_logger', icon: '»', name: 'Speed Logger', desc: 'Use NLP 10 times', check: (s: GamificationState) => s.nlpUses >= 10 },
+  { id: 'perfect_period', icon: '◆', name: 'Perfect Period', desc: 'Log hours every day in a period', check: (s: GamificationState) => s.perfectPeriods >= 1 },
+  { id: 'hat_trick', icon: '▲', name: 'Hat Trick', desc: 'Submit 3 periods in a row', check: (s: GamificationState) => s.streak >= 3 },
+  { id: 'marathon', icon: '→', name: 'Marathon', desc: 'Earn 500 XP total', check: (s: GamificationState) => s.totalXP >= 500 },
+  { id: 'consistency', icon: '★', name: 'Consistency', desc: 'Submit 5 timesheets', check: (s: GamificationState) => s.submits >= 5 },
+  { id: 'century', icon: '◉', name: 'Century Club', desc: 'Earn 1000 XP total', check: (s: GamificationState) => s.totalXP >= 1000 },
+  { id: 'level5', icon: '✦', name: 'Level 5', desc: 'Reach level 5', check: (s: GamificationState) => s.totalXP >= 700 },
+  { id: 'legend', icon: '⬡', name: 'Legend', desc: 'Reach max level', check: (s: GamificationState) => s.totalXP >= 3200 },
 ]
 
 interface GamificationState {
@@ -610,8 +610,14 @@ function TimesheetView({ user }: { user: any }) {
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs text-zinc-400 flex-shrink-0">
-          <span>🔥 {gState.streak} streak</span>
-          <span>📋 {gState.submits} submitted</span>
+          <span className="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 17h2a2.5 2.5 0 002.5-2.5c0-1.5-.5-2-1-3a6 6 0 001-6.5A6 6 0 018 7c-1 2-1.5 3.5-.5 6 .5 1.5 1 2 1 2z"/><path d="M12 22c2.5 0 4-1.5 4-4h-8c0 2.5 1.5 4 4 4z"/></svg>
+            {gState.streak} streak
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            {gState.submits} submitted
+          </span>
         </div>
       </div>
 
@@ -830,7 +836,7 @@ function TimesheetView({ user }: { user: any }) {
             disabled={!certified || isSubmitted}
             className="glass-btn-green px-5 py-2.5 rounded-xl font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Submit timesheet 🎉
+            Submit timesheet
           </button>
         </div>
 
@@ -1003,13 +1009,17 @@ function ResetPasswordPage() {
         </div>
         {!token ? (
           <div className="text-center py-4 space-y-3">
-            <div className="text-4xl">⚠️</div>
+            <div className="flex justify-center mb-1">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
             <p className="text-sm text-zinc-400">Invalid reset link. Please request a new one.</p>
             <a href="login" className="inline-block text-sm underline underline-offset-4 text-zinc-400 hover:text-white transition-colors">Back to sign in</a>
           </div>
         ) : success ? (
           <div className="text-center py-4 space-y-3">
-            <div className="text-4xl">✅</div>
+            <div className="flex justify-center mb-1">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
             <p className="text-sm text-zinc-400">Password updated successfully!</p>
             <a href="login" className="inline-block text-sm underline underline-offset-4 text-zinc-400 hover:text-white transition-colors">Sign in</a>
           </div>
@@ -2430,7 +2440,11 @@ export default function App() {
         <div className="ta-navbar-user">
           {/* Daily streak counter */}
           <div className="flex items-center gap-1.5 px-3 py-1 text-sm text-white/60 border border-white/10 rounded-full">
-            <span style={{ color: 'var(--accent-color)' }}>{streak > 0 ? '🔥' : '○'}</span>
+            <span style={{ color: 'var(--accent-color)' }}>
+              {streak > 0
+                ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline',verticalAlign:'middle'}}><path d="M8.5 14.5A2.5 2.5 0 0011 17h2a2.5 2.5 0 002.5-2.5c0-1.5-.5-2-1-3a6 6 0 001-6.5A6 6 0 018 7c-1 2-1.5 3.5-.5 6 .5 1.5 1 2 1 2z"/><path d="M12 22c2.5 0 4-1.5 4-4h-8c0 2.5 1.5 4 4 4z"/></svg>
+                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline',verticalAlign:'middle'}}><circle cx="12" cy="12" r="8"/></svg>}
+            </span>
             <span className="font-semibold" style={{ color: 'var(--accent-color)' }}>{streak}</span>
             <span className="text-white/40 ta-streak-label">day streak</span>
           </div>
@@ -2486,6 +2500,7 @@ export default function App() {
       <aside className={`ta-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <nav className="ta-nav">
           <button
+            id="nav-clock"
             className={`ta-nav-btn ${activeView === 'clock' ? 'active' : ''}`}
             onClick={() => navTo('clock')}
           >
@@ -2495,6 +2510,7 @@ export default function App() {
             Time Clock
           </button>
           <button
+            id="nav-timesheet"
             className={`ta-nav-btn ${activeView === 'timesheet' ? 'active' : ''}`}
             onClick={() => navTo('timesheet')}
           >
@@ -2504,6 +2520,7 @@ export default function App() {
             Timesheet
           </button>
           <button
+            id="nav-rewards"
             className={`ta-nav-btn ${activeView === 'rewards' ? 'active' : ''}`}
             onClick={() => navTo('rewards')}
           >
@@ -2540,6 +2557,7 @@ export default function App() {
             Files
           </button>
           <button
+            id="nav-groktax"
             className={`ta-nav-btn mb-2 ${activeView === 'groktax' ? 'active' : ''}`}
             onClick={() => navTo('groktax')}
           >
@@ -2550,6 +2568,7 @@ export default function App() {
           </button>
           <div className="ta-nav-section">Job Applications</div>
           <button
+            id="nav-applications"
             className={`ta-nav-btn mb-2 ${activeView === 'applications' ? 'active' : ''}`}
             onClick={() => navTo('applications')}
           >
@@ -2578,6 +2597,7 @@ export default function App() {
             Schedule Management
           </button>
           <button
+            id="nav-payroll"
             className={`ta-nav-btn ${activeView === 'payroll' ? 'active' : ''}`}
             onClick={() => navTo('payroll')}
           >
@@ -2625,6 +2645,7 @@ export default function App() {
         </nav>
         <div className="mt-auto pt-4">
           <button
+            id="nav-grokky"
             className={`ta-nav-btn ${activeView === 'grokky' ? 'active' : ''}`}
             onClick={() => navTo('grokky')}
             style={{ color: 'var(--accent-color)', textShadow: '0 0 8px var(--accent-color)' }}

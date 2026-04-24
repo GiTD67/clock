@@ -2,6 +2,41 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import confetti from 'canvas-confetti'
 import { motion } from 'framer-motion'
 
+const AchievementIcons: Record<string, React.ReactNode> = {
+  lightning: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  ),
+  century: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+    </svg>
+  ),
+  flame: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0011 17h2a2.5 2.5 0 002.5-2.5c0-1.5-.5-2-1-3a6 6 0 011-6.5A6 6 0 018 7c-1 2-1.5 3.5-.5 6 .5 1.5 1 2 1 2z"/>
+      <path d="M12 22c2.5 0 4-1.5 4-4h-8c0 2.5 1.5 4 4 4z"/>
+    </svg>
+  ),
+  target: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+    </svg>
+  ),
+  diamond: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+      <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/>
+    </svg>
+  ),
+  umbrella: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 12a11.05 11.05 0 00-22 0zm-5 7a3 3 0 01-6 0v-7"/>
+    </svg>
+  ),
+}
+
 interface RewardsProps {
   totalHours: number
   elapsedSeconds: number
@@ -64,12 +99,12 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
   const xpProgress = Math.min(100, ((totalXP - xpForCurrentLevel) / 500) * 100)
 
   const achievements = [
-    { id: 'first_shift', label: 'First Shift', icon: '⚡', desc: 'Clock in for the first time', unlocked: totalHours > 0 || isClockedIn },
-    { id: 'century', label: 'Century Club', icon: '💯', desc: 'Earn $100 in a day', unlocked: earnedToday >= 100 },
-    { id: 'overtime', label: 'Overtime Warrior', icon: '🔥', desc: 'Work over 9 hours', unlocked: totalHours > 9 },
-    { id: 'streak_3', label: 'On a Roll', icon: '🎯', desc: 'Work 3 days in a row', unlocked: streak >= 3 },
-    { id: 'high_earner', label: 'High Earner', icon: '💎', desc: 'Earn $500 in a week', unlocked: totalEarnings >= 500 },
-    { id: 'pto_master', label: 'PTO Hoarder', icon: '🏖️', desc: 'Accrue 1 hour of PTO', unlocked: accruedPTO >= 1 },
+    { id: 'first_shift', label: 'First Shift', iconKey: 'lightning', desc: 'Clock in for the first time', unlocked: totalHours > 0 || isClockedIn },
+    { id: 'century', label: 'Century Club', iconKey: 'century', desc: 'Earn $100 in a day', unlocked: earnedToday >= 100 },
+    { id: 'overtime', label: 'Overtime Warrior', iconKey: 'flame', desc: 'Work over 9 hours', unlocked: totalHours > 9 },
+    { id: 'streak_3', label: 'On a Roll', iconKey: 'target', desc: 'Work 3 days in a row', unlocked: streak >= 3 },
+    { id: 'high_earner', label: 'High Earner', iconKey: 'diamond', desc: 'Earn $500 in a week', unlocked: totalEarnings >= 500 },
+    { id: 'pto_master', label: 'PTO Hoarder', iconKey: 'umbrella', desc: 'Accrue 1 hour of PTO', unlocked: accruedPTO >= 1 },
   ]
 
   // Paycheck helpers
@@ -445,7 +480,12 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
         {/* Work Streak */}
         <div className="glass rounded-3xl p-6 text-center flex flex-col items-center justify-center">
           <div className="text-lg font-semibold neon-green uppercase tracking-[2px] mb-2">Work Streak</div>
-          <div className="text-4xl mb-1 select-none">🔥</div>
+          <div className="mb-1 select-none flex items-center justify-center" style={{ color: 'var(--accent-color)' }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8.5 14.5A2.5 2.5 0 0011 17h2a2.5 2.5 0 002.5-2.5c0-1.5-.5-2-1-3a6 6 0 001-6.5A6 6 0 018 7c-1 2-1.5 3.5-.5 6 .5 1.5 1 2 1 2z"/>
+              <path d="M12 22c2.5 0 4-1.5 4-4h-8c0 2.5 1.5 4 4 4z"/>
+            </svg>
+          </div>
           <div className="text-4xl font-bold neon-green tabular-nums">{streak}</div>
           <div className="text-xs text-zinc-500 mt-1.5">
             {streak === 0
@@ -525,7 +565,9 @@ export function Rewards({ totalHours, elapsedSeconds, isClockedIn, theme = 'gree
                   : {}
               }
             >
-              <div className="text-2xl mb-2 select-none">{ach.icon}</div>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-2 select-none" style={{ background: `${accentColor}18`, color: ach.unlocked ? accentColor : 'rgba(255,255,255,0.3)', border: `1px solid ${accentColor}25` }}>
+                {AchievementIcons[ach.iconKey]}
+              </div>
               <div className="text-sm font-semibold neon-green leading-tight">{ach.label}</div>
               <div className="text-xs text-zinc-500 mt-1 leading-snug">{ach.desc}</div>
               {ach.unlocked && (
