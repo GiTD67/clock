@@ -790,6 +790,81 @@ button, [role="button"] {
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.7), 0 0 24px rgba(255, 165, 0, 0.4);
 }
 
+/* neon-green → gold in overdrive */
+[data-overdrive="true"] .neon-green {
+  color: #FFD700 !important;
+}
+
+/* text-emerald-* → gold in overdrive */
+[data-overdrive="true"] .text-emerald-400,
+[data-overdrive="true"] .text-emerald-500 {
+  color: #FFD700 !important;
+}
+
+/* bg-emerald-* → gold in overdrive */
+[data-overdrive="true"] .bg-emerald-400,
+[data-overdrive="true"] .bg-emerald-500 {
+  background-color: #FFD700 !important;
+  color: #000 !important;
+}
+[data-overdrive="true"] .bg-emerald-600 {
+  background-color: #D4AF00 !important;
+  color: #000 !important;
+}
+[data-overdrive="true"] .bg-emerald-500\/80 {
+  background-color: rgba(255, 215, 0, 0.8) !important;
+  color: #000 !important;
+}
+[data-overdrive="true"] .bg-emerald-500\/20 {
+  background-color: rgba(255, 215, 0, 0.2) !important;
+  color: #FFD700 !important;
+}
+[data-overdrive="true"] .bg-emerald-500\/10 {
+  background-color: rgba(255, 215, 0, 0.1) !important;
+}
+
+/* border-emerald-* → gold in overdrive */
+[data-overdrive="true"] .border-emerald-400,
+[data-overdrive="true"] .border-emerald-500 {
+  border-color: #FFD700 !important;
+}
+[data-overdrive="true"] .border-emerald-500\/30 {
+  border-color: rgba(255, 215, 0, 0.3) !important;
+}
+
+/* border-white/* → gold in overdrive */
+[data-overdrive="true"] .border-white { border-color: #FFD700 !important; }
+[data-overdrive="true"] .border-white\/10 { border-color: rgba(255, 215, 0, 0.1) !important; }
+[data-overdrive="true"] .border-white\/15 { border-color: rgba(255, 215, 0, 0.15) !important; }
+[data-overdrive="true"] .border-white\/20 { border-color: rgba(255, 215, 0, 0.2) !important; }
+[data-overdrive="true"] .border-white\/30 { border-color: rgba(255, 215, 0, 0.3) !important; }
+[data-overdrive="true"] .border-white\/40 { border-color: rgba(255, 215, 0, 0.4) !important; }
+[data-overdrive="true"] .border-white\/70 { border-color: rgba(255, 215, 0, 0.7) !important; }
+
+/* Focus borders → gold in overdrive */
+[data-overdrive="true"] .focus\:border-white\/30:focus,
+[data-overdrive="true"] .focus\:border-white\/40:focus {
+  border-color: rgba(255, 215, 0, 0.4) !important;
+}
+
+/* Glass edge refraction → gold tint in overdrive */
+[data-overdrive="true"] .glass .glass-edge {
+  background: linear-gradient(145deg, rgba(255,215,0,0.08), transparent, rgba(255,215,0,0.04)) border-box;
+}
+
+/* ── Overdrive ring: orbiting speed spark ── */
+@keyframes overdrive-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Overdrive ring: electric bolt flashes ── */
+@keyframes overdrive-bolt {
+  0%, 100% { opacity: 0; }
+  8%        { opacity: 1; }
+  14%       { opacity: 0; }
+}
+
 /* ============================================
    PRINT STYLES — Paystub printing
    ============================================ */
