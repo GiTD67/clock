@@ -53,10 +53,13 @@ export function BreakReminderModal({
             {/* Icon + state badge */}
             <div className="flex items-center gap-3 mb-5">
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ background: `${urgencyColor}22`, border: `1px solid ${urgencyColor}44` }}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${urgencyColor}22`, border: `1px solid ${urgencyColor}44`, color: urgencyColor }}
               >
-                🍽️
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+                  <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+                </svg>
               </div>
               <div>
                 <div className="text-xs uppercase tracking-[2px] text-zinc-500">

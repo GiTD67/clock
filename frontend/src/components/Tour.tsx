@@ -1,59 +1,160 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+// Fintech-style SVG icon components
+const ClockIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+  </svg>
+)
+
+const DocumentIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+  </svg>
+)
+
+const TrophyIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+  </svg>
+)
+
+const CreditCardIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <line x1="2" y1="10" x2="22" y2="10"/>
+    <line x1="6" y1="15" x2="10" y2="15"/>
+  </svg>
+)
+
+const DollarIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="1" x2="12" y2="23"/>
+    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+  </svg>
+)
+
+const BotIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1a7 7 0 01-7 7H9a7 7 0 01-7-7H1a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
+    <circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/>
+  </svg>
+)
+
+const LightningIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+)
+
+const CheckCircleIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+)
+
+const SparkleIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.1-6.2-4.5-6.2 4.5 2.4-7.1L2 9.4h7.6L12 2z"/>
+  </svg>
+)
+
 interface TourStep {
-  icon: string
+  icon: React.ReactNode
   title: string
   desc: string
+  targetId: string | null
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
-    icon: '👋',
+    icon: <SparkleIcon />,
     title: 'Welcome to SwiftShift!',
     desc: "You're in. Let's take a 60-second tour of the key features so you can hit the ground running.",
+    targetId: null,
   },
   {
-    icon: '⏱',
+    icon: <ClockIcon />,
     title: 'Time Clock',
     desc: 'Clock in and out with one click. Your earnings update in real time — every second counts. Track breaks too.',
+    targetId: 'nav-clock',
   },
   {
-    icon: '📋',
+    icon: <DocumentIcon />,
     title: 'Timesheet',
     desc: 'All your time entries in one place. Add, edit, and submit your weekly timesheet with ease.',
+    targetId: 'nav-timesheet',
   },
   {
-    icon: '🏆',
+    icon: <TrophyIcon />,
     title: 'Rewards',
     desc: 'Stay consistent and earn streak rewards. Watch your real-time earnings climb on the Odometer.',
+    targetId: 'nav-rewards',
   },
   {
-    icon: '💳',
+    icon: <CreditCardIcon />,
     title: 'Payroll & Reports',
     desc: 'View pay details, export reports, and track your analytics — all in one dashboard.',
+    targetId: 'nav-payroll',
   },
   {
-    icon: '💰',
+    icon: <DollarIcon />,
     title: 'AI Tax Filing — Swifty',
     desc: 'Upload your W-2 or 1099 and Swifty fills out your Form 1040 instantly. No accountant needed.',
+    targetId: 'nav-groktax',
   },
   {
-    icon: '🤖',
+    icon: <BotIcon />,
     title: 'AI Assistant — Swifty',
     desc: 'Ask Swifty anything — leave policies, HR questions, company info. Instant, intelligent answers.',
+    targetId: 'nav-grokky',
   },
   {
-    icon: '⚡',
+    icon: <LightningIcon />,
     title: 'InstaApply',
     desc: 'Upload your resume once. SwiftShift matches you to jobs and applies in seconds.',
+    targetId: 'nav-applications',
   },
   {
-    icon: '✅',
+    icon: <CheckCircleIcon />,
     title: "You're all set!",
     desc: "That covers the highlights. Start by clocking in — your first session is just one click away.",
+    targetId: null,
   },
 ]
+
+const BOX_WIDTH = 400
+const BOX_HEIGHT_EST = 390
+
+interface BoxPosition {
+  top: number
+  left: number
+  hasArrow: boolean
+  arrowTop: number
+}
+
+function computePosition(stepIndex: number): BoxPosition {
+  const step = TOUR_STEPS[stepIndex]
+  const centered: BoxPosition = {
+    top: Math.max(64, (window.innerHeight - BOX_HEIGHT_EST) / 2),
+    left: Math.max(0, (window.innerWidth - BOX_WIDTH) / 2),
+    hasArrow: false,
+    arrowTop: 0,
+  }
+  if (!step.targetId) return centered
+  const target = document.getElementById(step.targetId)
+  if (!target) return centered
+  const rect = target.getBoundingClientRect()
+  const left = 240 + 28
+  const targetMidY = rect.top + rect.height / 2
+  const top = Math.max(80, Math.min(window.innerHeight - BOX_HEIGHT_EST - 24, targetMidY - BOX_HEIGHT_EST / 2))
+  return { top, left, hasArrow: true, arrowTop: targetMidY - top }
+}
 
 interface TourProps {
   onClose: () => void
@@ -62,41 +163,92 @@ interface TourProps {
 
 export function Tour({ onClose, accentHex = '#D7FE51' }: TourProps) {
   const [step, setStep] = useState(0)
+  const [pos, setPos] = useState<BoxPosition>(() => computePosition(0))
+
   const current = TOUR_STEPS[step]
   const isLast = step === TOUR_STEPS.length - 1
-  const isDark = accentHex === '#D7FE51' || accentHex === '#E5E7EB' || accentHex === '#51FEFE' || accentHex === '#FE51D7'
+  const isDark = ['#D7FE51', '#E5E7EB', '#51FEFE', '#FE51D7'].includes(accentHex)
 
-  const next = () => {
-    if (isLast) onClose()
-    else setStep(s => s + 1)
-  }
+  useEffect(() => {
+    const newPos = computePosition(step)
+    setPos(newPos)
 
-  const prev = () => {
-    if (step > 0) setStep(s => s - 1)
-  }
+    // Apply highlight to target nav button
+    const target = current.targetId ? document.getElementById(current.targetId) : null
+    if (target) {
+      target.style.boxShadow = `0 0 0 2px ${accentHex}80, inset 3px 0 0 ${accentHex}`
+      target.style.background = `${accentHex}18`
+      target.style.color = '#fff'
+    }
+    return () => {
+      if (target) {
+        target.style.boxShadow = ''
+        target.style.background = ''
+        target.style.color = ''
+      }
+    }
+  }, [step, current.targetId, accentHex])
+
+  useEffect(() => {
+    return () => {
+      TOUR_STEPS.forEach(s => {
+        if (s.targetId) {
+          const el = document.getElementById(s.targetId)
+          if (el) { el.style.boxShadow = ''; el.style.background = ''; el.style.color = '' }
+        }
+      })
+    }
+  }, [])
+
+  const next = () => { if (isLast) onClose(); else setStep(s => s + 1) }
+  const prev = () => { if (step > 0) setStep(s => s - 1) }
 
   return (
     <div
-      className="fixed inset-0 z-[300] flex items-center justify-center bg-black/75 backdrop-blur-sm"
+      className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 20, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.97 }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="glass w-full max-w-[420px] rounded-3xl p-8 border border-white/10 mx-4"
-          style={{ boxShadow: `0 0 80px -20px ${accentHex}35, 0 28px 72px -14px rgba(0,0,0,0.85)` }}
-        >
+      <motion.div
+        initial={{ top: pos.top, left: pos.left, opacity: 0, scale: 0.96 }}
+        animate={{ top: pos.top, left: pos.left, opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 38 }}
+        className="absolute glass rounded-3xl border border-white/10"
+        style={{
+          width: BOX_WIDTH,
+          boxShadow: `0 0 80px -20px ${accentHex}35, 0 28px 72px -14px rgba(0,0,0,0.85)`,
+        }}
+      >
+        {/* Arrow pointing left toward sidebar */}
+        <AnimatePresence>
+          {pos.hasArrow && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, top: pos.arrowTop }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 38 }}
+              style={{
+                position: 'absolute',
+                left: -11,
+                width: 0,
+                height: 0,
+                borderTop: '11px solid transparent',
+                borderBottom: '11px solid transparent',
+                borderRight: `11px solid ${accentHex}`,
+                transform: 'translateY(-50%)',
+                filter: `drop-shadow(-2px 0 6px ${accentHex}50)`,
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        <div className="p-8">
           {/* Progress bar */}
-          <div className="h-1 rounded-full bg-white/10 mb-6 overflow-hidden">
+          <div className="h-0.5 rounded-full bg-white/10 mb-6 overflow-hidden">
             <motion.div
               className="h-full rounded-full"
               style={{ backgroundColor: accentHex }}
               animate={{ width: `${((step + 1) / TOUR_STEPS.length) * 100}%` }}
-              transition={{ duration: 0.35 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
             />
           </div>
 
@@ -105,21 +257,41 @@ export function Tour({ onClose, accentHex = '#D7FE51' }: TourProps) {
             Step {step + 1} <span className="text-zinc-700">/ {TOUR_STEPS.length}</span>
           </div>
 
-          {/* Icon */}
-          <div className="text-5xl mb-4 leading-none">{current.icon}</div>
+          {/* Animated content */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
+            >
+              {/* Icon */}
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                style={{
+                  background: `${accentHex}15`,
+                  color: accentHex,
+                  border: `1px solid ${accentHex}28`,
+                }}
+              >
+                {current.icon}
+              </div>
 
-          {/* Title */}
-          <h2
-            className="text-2xl font-semibold tracking-tight mb-3"
-            style={{ color: step === 0 || isLast ? accentHex : 'white' }}
-          >
-            {current.title}
-          </h2>
+              {/* Title */}
+              <h2
+                className="text-2xl font-semibold tracking-tight mb-3"
+                style={{ color: step === 0 || isLast ? accentHex : 'white' }}
+              >
+                {current.title}
+              </h2>
 
-          {/* Description */}
-          <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-            {current.desc}
-          </p>
+              {/* Description */}
+              <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+                {current.desc}
+              </p>
+            </motion.div>
+          </AnimatePresence>
 
           {/* Actions */}
           <div className="flex items-center justify-between gap-3">
@@ -141,12 +313,9 @@ export function Tour({ onClose, accentHex = '#D7FE51' }: TourProps) {
               <button
                 onClick={next}
                 className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.97] hover:opacity-90"
-                style={{
-                  background: accentHex,
-                  color: isDark ? '#000' : '#fff',
-                }}
+                style={{ background: accentHex, color: isDark ? '#000' : '#fff' }}
               >
-                {isLast ? 'Get started →' : 'Next →'}
+                {isLast ? 'Get started' : 'Next'}
               </button>
             </div>
           </div>
@@ -167,8 +336,8 @@ export function Tour({ onClose, accentHex = '#D7FE51' }: TourProps) {
               />
             ))}
           </div>
-        </motion.div>
-      </AnimatePresence>
+        </div>
+      </motion.div>
     </div>
   )
 }
