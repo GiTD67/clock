@@ -498,7 +498,17 @@ function TimesheetView({ user }: { user: any }) {
       setTimeout(() => confetti({ particleCount: 100, spread: 70, angle: 75, origin: { x: 0.2, y: 0.6 } }), 150)
       setTimeout(() => confetti({ particleCount: 100, spread: 70, angle: 105, origin: { x: 0.8, y: 0.6 } }), 300)
 
-      // Persist timesheet submission to backend
+      // Persist timesheet submission to legacy and new backend endpoints
+      fetch(`${API_BASE}/api/timesheet-submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id,
+          period_start: start.toISOString().slice(0, 10),
+          period_end: end.toISOString().slice(0, 10),
+          total_hours: totalHours,
+        }),
+      }).catch(() => {})
       if (user?.id) {
         fetch(`${API_BASE}/api/timesheets`, {
           method: 'POST',
