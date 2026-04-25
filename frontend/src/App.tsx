@@ -3896,6 +3896,7 @@ export default function App() {
               users={users}
               isAdmin={isAdmin}
               accentColor={themeAccentHex}
+              addXP={gamification.addXP}
             />
           )}
           {activeView === 'leaves' && (
