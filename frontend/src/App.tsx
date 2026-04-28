@@ -17,7 +17,7 @@ import { STATE_BREAK_RULES, STATE_CODES } from './data/stateBreakRules'
 
 const API_BASE = ''
 
-type View = 'clock' | 'timesheet' | 'rewards' | 'xpcenter' | 'admin' | 'profile' | 'insurance' | 'orgchart' | 'taxes' | 'groktax' | 'grokky' | 'applications' | 'jobs' | 'schedules' | 'payroll' | 'reports' | 'leaves' | 'compliance' | 'hiring' | 'kpi' | 'teamkpi' | 'announcements'
+type View = 'clock' | 'timesheet' | 'rewards' | 'xpcenter' | 'admin' | 'profile' | 'insurance' | 'orgchart' | 'taxes' | 'groktax' | 'grokky' | 'applications' | 'jobs' | 'schedules' | 'payroll' | 'reports' | 'leaves' | 'compliance' | 'hiring' | 'kpi' | 'teamkpi' | 'announcements' | 'pricing'
 
 function formatMs(ms: number): string {
   const totalSec = Math.floor(ms / 1000)
@@ -2119,6 +2119,8 @@ export default function App() {
     return (saved === 'green' || saved === 'white' || saved === 'orange' || saved === 'cyan' || saved === 'pink' || saved === 'purple' || saved === 'red' || saved === 'gold' || saved === 'teal' || saved === 'blue' || saved === 'custom') ? saved : 'green'
   })
   const [customAccentColor, setCustomAccentColor] = useState<string>(() => localStorage.getItem('swiftshift-custom-accent') || '#00FF88')
+  const [backgroundStyle, setBackgroundStyle] = useState<string>(() => localStorage.getItem('swiftshift-bg-style') || 'default')
+  const [avatarFrame, setAvatarFrame] = useState<string>(() => localStorage.getItem('swiftshift-avatar-frame') || 'none')
 
   const gamification = useGamification()
   const { gState: appGState, currentLevel: appCurrentLevel, nextLevel: appNextLevel } = gamification
@@ -2155,6 +2157,10 @@ export default function App() {
   })
   const [draggedNavId, setDraggedNavId] = useState<string | null>(null)
   const [dragOverNavId, setDragOverNavId] = useState<string | null>(null)
+  const [dragOverNavPosition, setDragOverNavPosition] = useState<'above' | 'below'>('below')
+  const [draggedFavId, setDraggedFavId] = useState<string | null>(null)
+  const [dragOverFavId, setDragOverFavId] = useState<string | null>(null)
+  const [dragOverFavPosition, setDragOverFavPosition] = useState<'above' | 'below'>('below')
   const [, setWorkSchedule] = useState<any>(null)
   const [directDeposit, setDirectDeposit] = useState<any>(null)
   const [, setWorkAvailability] = useState<any>(null)
@@ -2219,15 +2225,35 @@ export default function App() {
     setSidebarOrder(prev => {
       const arr = [...prev]
       const fromIdx = arr.indexOf(draggedNavId)
-      const toIdx = arr.indexOf(targetId)
+      let toIdx = arr.indexOf(targetId)
       if (fromIdx < 0 || toIdx < 0) return prev
       arr.splice(fromIdx, 1)
-      arr.splice(toIdx, 0, draggedNavId)
+      toIdx = arr.indexOf(targetId)
+      const insertAt = dragOverNavPosition === 'below' ? toIdx + 1 : toIdx
+      arr.splice(insertAt, 0, draggedNavId)
       localStorage.setItem('swiftshift-sidebar-order', JSON.stringify(arr))
       return arr
     })
     setDraggedNavId(null)
     setDragOverNavId(null)
+  }
+
+  const handleFavDrop = (targetId: string) => {
+    if (!draggedFavId || draggedFavId === targetId) { setDraggedFavId(null); setDragOverFavId(null); return }
+    setFavoriteTabs(prev => {
+      const arr = [...prev]
+      const fromIdx = arr.indexOf(draggedFavId)
+      let toIdx = arr.indexOf(targetId)
+      if (fromIdx < 0 || toIdx < 0) return prev
+      arr.splice(fromIdx, 1)
+      toIdx = arr.indexOf(targetId)
+      const insertAt = dragOverFavPosition === 'below' ? toIdx + 1 : toIdx
+      arr.splice(insertAt, 0, draggedFavId)
+      localStorage.setItem('swiftshift-favorite-tabs', JSON.stringify(arr))
+      return arr
+    })
+    setDraggedFavId(null)
+    setDragOverFavId(null)
   }
 
   const navToRewardsWithHighlight = () => {
@@ -2365,6 +2391,15 @@ export default function App() {
     localStorage.setItem('theme', theme)
     document.body.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    localStorage.setItem('swiftshift-bg-style', backgroundStyle)
+    document.body.setAttribute('data-bg', backgroundStyle)
+  }, [backgroundStyle])
+
+  useEffect(() => {
+    localStorage.setItem('swiftshift-avatar-frame', avatarFrame)
+  }, [avatarFrame])
 
   // Apply custom accent color as CSS variable when custom theme is active
   useEffect(() => {
@@ -2530,11 +2565,7 @@ export default function App() {
         // If active session exists (clock_out IS NULL), restore clockInAt
         if (active && active.clock_in) {
           const clockInDate = new Date(active.clock_in)
-          const activeElapsedMs = Math.max(0, Date.now() - clockInDate.getTime())
-          // Add elapsed to today if clock_in is today
-          if (active.clock_in.slice(0, 10) === todayStr) {
-            todayMs += activeElapsedMs
-          }
+          // sessionWorkedMs derives live time from clockInAt, so only sum completed sessions here
           setClockInAt(clockInDate)
           localStorage.setItem('swiftshift-clock-in-at', clockInDate.toISOString())
           setActiveSessionId(active.id)
@@ -3066,7 +3097,7 @@ export default function App() {
   const navUnlockedAchievements = appGState.unlockedAchievements
 
   return (
-    <div className="ta-app" data-theme={theme} data-overdrive={isOvertimeOverdrive ? 'true' : undefined}>
+    <div className="ta-app" data-theme={theme} data-bg={backgroundStyle} data-overdrive={isOvertimeOverdrive ? 'true' : undefined}>
       <nav className="ta-navbar">
         <div className="flex items-center gap-2">
           {/* Hamburger (mobile only) */}
@@ -3143,8 +3174,10 @@ export default function App() {
           <div className="relative group">
             <span className="text-sm text-zinc-400 cursor-pointer flex items-center gap-2">
               {profilePicUrl
-                ? <img src={profilePicUrl} alt="Profile" className="w-6 h-6 rounded-full object-cover border border-white/20" style={{ objectPosition: `${profilePicX}% ${profilePicY}%`, transform: `scale(${profilePicZoom})`, transformOrigin: `${profilePicX}% ${profilePicY}%` }} />
-                : <span className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs text-zinc-400">{user.first_name?.[0]?.toUpperCase()}</span>
+                ? <span className={`w-6 h-6 rounded-full overflow-hidden flex-shrink-0 inline-flex ${avatarFrame === 'glow' ? 'ring-2 ring-[var(--accent-color)] shadow-[0_0_8px_var(--accent-color)]' : avatarFrame === 'gold' ? 'ring-2 ring-yellow-400' : avatarFrame === 'rainbow' ? 'ring-2 ring-purple-400' : 'border border-white/20'}`}>
+                    <img src={profilePicUrl} alt="Profile" className="w-full h-full object-cover" style={{ objectPosition: `${profilePicX}% ${profilePicY}%`, transform: `scale(${profilePicZoom})`, transformOrigin: `${profilePicX}% ${profilePicY}%` }} />
+                  </span>
+                : <span className={`w-6 h-6 rounded-full bg-white/10 flex-shrink-0 inline-flex items-center justify-center text-xs text-zinc-400 ${avatarFrame === 'glow' ? 'ring-2 ring-[var(--accent-color)] shadow-[0_0_8px_var(--accent-color)]' : avatarFrame === 'gold' ? 'ring-2 ring-yellow-400' : avatarFrame === 'rainbow' ? 'ring-2 ring-purple-400' : 'border border-white/20'}`}>{user.first_name?.[0]?.toUpperCase()}</span>
               }
               Hi, {user.first_name} <span className="text-[10px] px-1.5 py-0.5 rounded-full ml-1" style={{ backgroundColor: 'var(--accent-color)', color: '#000', fontWeight: 700 }}>Lv.{appCurrentLevel.level}<span className="ta-level-badge-name"> {appCurrentLevel.name}</span></span> ▾
             </span>
@@ -3230,6 +3263,67 @@ export default function App() {
                   </div>
                 </div>
               )}
+              {/* Background Styles */}
+              <div className="px-3 py-2 border-t border-white/10">
+                <div className="text-xs text-zinc-500 mb-1.5">Background Style</div>
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { id: 'default', label: 'Solid', unlock: 1, preview: '#000' },
+                    { id: 'grid', label: 'Grid', unlock: 2, preview: 'repeating-linear-gradient(0deg,rgba(255,255,255,0.05) 0,rgba(255,255,255,0.05) 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,rgba(255,255,255,0.05) 0,rgba(255,255,255,0.05) 1px,transparent 1px,transparent 32px)' },
+                    { id: 'dots', label: 'Dots', unlock: 3, preview: 'radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)' },
+                    { id: 'gradient', label: 'Grad', unlock: 5, preview: 'linear-gradient(135deg,#000,#111,#000)' },
+                    { id: 'circuit', label: 'Circuit', unlock: 7, preview: 'linear-gradient(45deg,#000 45%,rgba(255,255,255,0.04) 45%,rgba(255,255,255,0.04) 55%,#000 55%)' },
+                    { id: 'stars', label: 'Stars', unlock: 8, preview: 'radial-gradient(circle at 20% 30%,rgba(255,255,255,0.12) 1px,transparent 1px)' },
+                    { id: 'wave', label: 'Wave', unlock: 9, preview: 'linear-gradient(60deg,#000 25%,rgba(255,255,255,0.03) 50%,#000 75%)' },
+                    { id: 'aurora', label: 'Aurora', unlock: 10, preview: 'linear-gradient(135deg,rgba(100,0,255,0.15),rgba(0,255,200,0.15))' },
+                  ].map(bg => {
+                    const unlocked = appCurrentLevel.level >= bg.unlock
+                    return (
+                      <button
+                        key={bg.id}
+                        onClick={() => unlocked && setBackgroundStyle(bg.id)}
+                        title={unlocked ? bg.label : `Unlocks at Level ${bg.unlock}`}
+                        className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all ${backgroundStyle === bg.id ? 'ring-1 ring-white/40' : ''} ${!unlocked ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                      >
+                        <div className="relative w-4 h-4 rounded border border-white/20 overflow-hidden" style={{ background: bg.preview, backgroundSize: '8px 8px' }} />
+                        <span className="text-[8px] text-zinc-400 leading-tight">{unlocked ? bg.label : `L${bg.unlock}`}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              {/* Avatar Frames */}
+              {appCurrentLevel.level >= 3 && (
+                <div className="px-3 py-2 border-t border-white/10">
+                  <div className="text-xs text-zinc-500 mb-1.5">Avatar Frame</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[
+                      { id: 'none', label: 'None', unlock: 1 },
+                      { id: 'glow', label: 'Neon', unlock: 3 },
+                      { id: 'gold', label: 'Gold', unlock: 6 },
+                      { id: 'rainbow', label: 'Elite', unlock: 9 },
+                    ].map(frame => {
+                      const unlocked = appCurrentLevel.level >= frame.unlock
+                      return (
+                        <button
+                          key={frame.id}
+                          onClick={() => unlocked && setAvatarFrame(frame.id)}
+                          title={unlocked ? frame.label : `Unlocks at Level ${frame.unlock}`}
+                          className={`text-[9px] px-2 py-1 rounded-lg transition-all ${avatarFrame === frame.id ? 'ring-1 ring-white/40 bg-white/10' : ''} ${!unlocked ? 'opacity-50 cursor-not-allowed text-zinc-600' : 'hover:bg-white/10 text-zinc-400'}`}
+                        >
+                          {unlocked ? frame.label : `L${frame.unlock}`}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={() => navTo('pricing')}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-zinc-400 border-t border-white/10"
+              >
+                Pricing
+              </button>
               <button
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-red-400 rounded-b-xl border-t border-white/10"
@@ -3268,50 +3362,67 @@ export default function App() {
           const favoriteItems = favoriteTabs.map(fid => NAV_ITEMS.find(n => n.id === fid)).filter(Boolean) as typeof NAV_ITEMS
           const mainItems = sortedItems.filter(item => !favoriteTabs.includes(item.id))
 
-          const renderNavBtn = (item: typeof NAV_ITEMS[0], isDraggable = false) => (
-            <button
-              key={isDraggable ? item.id : `fav-${item.id}`}
-              id={item.htmlId}
-              className={`ta-nav-btn group ${activeView === item.view ? 'active' : ''}`}
-              onClick={() => navTo(item.view)}
-              draggable={isDraggable}
-              onDragStart={isDraggable ? () => setDraggedNavId(item.id) : undefined}
-              onDragOver={isDraggable ? (e) => { e.preventDefault(); setDragOverNavId(item.id) } : undefined}
-              onDrop={isDraggable ? () => handleNavDrop(item.id) : undefined}
-              onDragEnd={isDraggable ? () => { setDraggedNavId(null); setDragOverNavId(null) } : undefined}
-              style={{
-                opacity: draggedNavId === item.id ? 0.4 : undefined,
-                outline: dragOverNavId === item.id ? '2px solid var(--accent-color)' : undefined,
-                outlineOffset: '-2px',
-              }}
-            >
-              {item.icon}
-              <span className="flex-1 text-left truncate">{item.label}</span>
+          const renderNavBtn = (item: typeof NAV_ITEMS[0], context: 'main' | 'fav' | false = false) => {
+            const isFav = context === 'fav'
+            const isDraggable = context === 'main' || context === 'fav'
+            const isDragging = isFav ? draggedFavId === item.id : draggedNavId === item.id
+            const isDragOver = isFav ? dragOverFavId === item.id : dragOverNavId === item.id
+            const overPos = isFav ? dragOverFavPosition : dragOverNavPosition
+            return (
               <button
-                onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id) }}
-                className={`shrink-0 text-[13px] transition-colors opacity-0 group-hover:opacity-100 ${favoriteTabs.includes(item.id) ? 'text-yellow-400 opacity-100' : 'text-zinc-600 hover:text-zinc-400'}`}
-                title={favoriteTabs.includes(item.id) ? 'Remove from favorites' : 'Add to favorites'}
-                style={{ padding: '0 2px', lineHeight: 1 }}
+                key={isFav ? `fav-${item.id}` : item.id}
+                id={item.htmlId}
+                className={`ta-nav-btn group ${activeView === item.view ? 'active' : ''}`}
+                onClick={() => navTo(item.view)}
+                draggable={isDraggable}
+                onDragStart={isDraggable ? () => isFav ? setDraggedFavId(item.id) : setDraggedNavId(item.id) : undefined}
+                onDragOver={isDraggable ? (e) => {
+                  e.preventDefault()
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const pos: 'above' | 'below' = e.clientY < rect.top + rect.height / 2 ? 'above' : 'below'
+                  if (isFav) { setDragOverFavId(item.id); setDragOverFavPosition(pos) }
+                  else { setDragOverNavId(item.id); setDragOverNavPosition(pos) }
+                } : undefined}
+                onDrop={isDraggable ? () => isFav ? handleFavDrop(item.id) : handleNavDrop(item.id) : undefined}
+                onDragEnd={isDraggable ? () => isFav
+                  ? (setDraggedFavId(null), setDragOverFavId(null))
+                  : (setDraggedNavId(null), setDragOverNavId(null))
+                : undefined}
+                style={{
+                  opacity: isDragging ? 0.4 : undefined,
+                  borderTop: isDragOver && overPos === 'above' ? '2px solid var(--accent-color)' : undefined,
+                  borderBottom: isDragOver && overPos === 'below' ? '2px solid var(--accent-color)' : undefined,
+                }}
               >
-                {favoriteTabs.includes(item.id) ? '★' : '☆'}
+                {item.icon}
+                <span className="flex-1 text-left truncate">{item.label}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id) }}
+                  className={`shrink-0 text-[13px] transition-colors opacity-0 group-hover:opacity-100 ${favoriteTabs.includes(item.id) ? 'text-yellow-400 opacity-100' : 'text-zinc-600 hover:text-zinc-400'}`}
+                  title={favoriteTabs.includes(item.id) ? 'Remove from favorites' : 'Add to favorites'}
+                  style={{ padding: '0 2px', lineHeight: 1 }}
+                >
+                  {favoriteTabs.includes(item.id) ? '★' : '☆'}
+                </button>
               </button>
-            </button>
-          )
+            )
+          }
 
           return (
             <nav className="ta-nav">
               {favoriteItems.length > 0 && (
                 <>
                   <div className="ta-nav-section" style={{ color: 'rgba(255,255,255,0.35)' }}>Favorites</div>
-                  {favoriteItems.map(item => renderNavBtn(item, false))}
+                  {favoriteItems.map(item => renderNavBtn(item, 'fav'))}
                   <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '6px 14px 4px' }} />
                 </>
               )}
-              {mainItems.map(item => renderNavBtn(item, true))}
+              {mainItems.map(item => renderNavBtn(item, 'main'))}
 
               {/* ── Manager collapsible section ── */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '10px 14px 6px' }} />
               <button
-                className="ta-nav-section-btn w-full flex items-center justify-between px-3 py-2 mt-1 rounded-lg text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer select-none"
+                className="ta-nav-section-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer select-none"
                 onClick={() => setManagerSectionOpen(v => !v)}
               >
                 <span className="flex items-center gap-2">
@@ -3384,6 +3495,13 @@ export default function App() {
               <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1a7 7 0 01-7 7H9a7 7 0 01-7-7H1a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/><circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/>
             </svg>
             Swifty - AI Assistant
+          </button>
+          <button
+            className={`ta-nav-btn ${activeView === 'pricing' ? 'active' : ''} text-zinc-500 hover:text-zinc-300`}
+            onClick={() => navTo('pricing')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            Pricing
           </button>
         </div>
       </aside>
@@ -6313,6 +6431,86 @@ export default function App() {
 
                 <div className="text-xs text-zinc-500">
                   Jobs are stored in the database and visible to other users.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === 'pricing' && (
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-10">
+                <h1 className="text-4xl font-bold neon-green mb-3">Simple, transparent pricing</h1>
+                <p className="text-zinc-400 text-lg">Start free, scale when you're ready. No hidden fees.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Free */}
+                <div className="glass rounded-3xl p-8 flex flex-col">
+                  <div className="text-sm uppercase tracking-[2px] text-zinc-400 mb-1">Starter</div>
+                  <div className="text-4xl font-bold text-white mb-1">Free</div>
+                  <div className="text-zinc-500 text-sm mb-6">Perfect for small teams getting started</div>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {['Up to 5 employees', 'Time clock & timesheets', 'Basic rewards & XP', 'Real-time earnings tracker', 'AI assistant (Swifty) - 20 msgs/mo', 'Mobile responsive'].map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                        <svg className="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full py-3 rounded-xl border border-white/20 text-sm font-semibold text-white hover:bg-white/5 transition-colors">Get started free</button>
+                </div>
+
+                {/* Pro */}
+                <div className="rounded-3xl p-8 flex flex-col relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(var(--accent-color-rgb),0.15), rgba(var(--accent-color-rgb),0.05))', border: '1px solid var(--accent-color)', boxShadow: '0 0 40px rgba(var(--accent-color-rgb),0.15)' }}>
+                  <div className="absolute top-4 right-4 text-[10px] px-2 py-0.5 rounded-full font-bold text-black" style={{ backgroundColor: 'var(--accent-color)' }}>MOST POPULAR</div>
+                  <div className="text-sm uppercase tracking-[2px] mb-1" style={{ color: 'var(--accent-color)' }}>Pro</div>
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-4xl font-bold text-white">$12</span>
+                    <span className="text-zinc-400 text-sm mb-1.5">/employee/mo</span>
+                  </div>
+                  <div className="text-zinc-500 text-sm mb-6">Everything in Starter, plus</div>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {['Unlimited employees', 'Manager hub & approvals', 'Payroll & compliance tools', 'Leave management', 'AI assistant - unlimited', 'Custom themes & backgrounds', 'Org chart & hiring tools', 'Advanced KPI dashboards', 'Priority support'].map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                        <svg className="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full py-3 rounded-xl text-sm font-bold text-black transition-opacity hover:opacity-90" style={{ backgroundColor: 'var(--accent-color)' }}>Start 14-day free trial</button>
+                </div>
+
+                {/* Enterprise */}
+                <div className="glass rounded-3xl p-8 flex flex-col">
+                  <div className="text-sm uppercase tracking-[2px] text-zinc-400 mb-1">Enterprise</div>
+                  <div className="text-4xl font-bold text-white mb-1">Custom</div>
+                  <div className="text-zinc-500 text-sm mb-6">For large organizations with custom needs</div>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {['Everything in Pro', 'Custom integrations', 'SSO & SAML', 'Dedicated account manager', 'SLA guarantee', 'On-premise deployment option', 'Custom AI training', 'Volume discounts', 'White-label option'].map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                        <svg className="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full py-3 rounded-xl border border-white/20 text-sm font-semibold text-white hover:bg-white/5 transition-colors">Contact sales</button>
+                </div>
+              </div>
+
+              {/* FAQ */}
+              <div className="glass rounded-3xl p-8 mt-8">
+                <h2 className="text-xl font-semibold mb-6" style={{ color: 'var(--accent-color)' }}>Frequently asked questions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { q: 'Can I switch plans anytime?', a: 'Yes, you can upgrade or downgrade at any time. Changes take effect at the start of your next billing cycle.' },
+                    { q: 'Is there a free trial?', a: 'Pro plans come with a 14-day free trial, no credit card required. Starter is free forever.' },
+                    { q: 'How does per-employee billing work?', a: 'You\'re billed based on active employees in your workspace each month. Add or remove team members anytime.' },
+                    { q: 'What payment methods do you accept?', a: 'We accept all major credit cards, ACH bank transfers, and invoicing for Enterprise customers.' },
+                  ].map(({ q, a }) => (
+                    <div key={q} className="space-y-1">
+                      <div className="text-sm font-semibold text-white">{q}</div>
+                      <div className="text-sm text-zinc-400">{a}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
